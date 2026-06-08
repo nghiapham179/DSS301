@@ -32,6 +32,65 @@
     <commands />
     <urls />
   </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0" />
+      <entry key="S10" value="1.0" />
+      <entry key="S30" value="1.0" />
+      <entry key="S60" value="1.0" />
+      <entry key="M2" value="1.0" />
+      <entry key="M5" value="1.0" />
+      <entry key="M10" value="1.0" />
+      <entry key="M15" value="1.0" />
+      <entry key="M30" value="1.0" />
+      <entry key="H1" value="1.0" />
+      <entry key="H2" value="1.0" />
+      <entry key="H4" value="1.0" />
+      <entry key="D1" value="1.0" />
+      <entry key="W1" value="1.0" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="2.1401506868067266E-4" />
+      <entry key="MS500" value="0.18453930071035413" />
+      <entry key="S2" value="0.6554238151559587" />
+      <entry key="S5" value="0.8445179543569319" />
+      <entry key="S10" value="0.9189765798740096" />
+      <entry key="S30" value="0.9722280521993697" />
+      <entry key="S60" value="0.9860162535168321" />
+      <entry key="M2" value="0.992983511200882" />
+      <entry key="M5" value="0.9971874745377142" />
+      <entry key="M10" value="0.9985927470884786" />
+      <entry key="M15" value="0.9990616112144988" />
+      <entry key="M30" value="0.999530695483885" />
+      <entry key="H1" value="0.9997653202046393" />
+      <entry key="H2" value="0.999882653217186" />
+      <entry key="H4" value="0.9999413248872085" />
+      <entry key="D1" value="0.9999902205754451" />
+      <entry key="W1" value="0.999998602933494" />
+    </decayedShown>
+  </component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
     <option name="showPreview" value="true" />
