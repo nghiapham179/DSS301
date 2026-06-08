@@ -11,7 +11,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="23" />
+    <option name="cachedIndexableFilesCount" value="24" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -34,23 +34,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0" />
-      <entry key="S2" value="1.0" />
-      <entry key="S5" value="1.0" />
-      <entry key="S10" value="1.0" />
-      <entry key="S30" value="1.0" />
-      <entry key="S60" value="1.0" />
-      <entry key="M2" value="1.0" />
-      <entry key="M5" value="1.0" />
-      <entry key="M10" value="1.0" />
-      <entry key="M15" value="1.0" />
-      <entry key="M30" value="1.0" />
-      <entry key="H1" value="1.0" />
-      <entry key="H2" value="1.0" />
-      <entry key="H4" value="1.0" />
-      <entry key="D1" value="1.0" />
-      <entry key="W1" value="1.0" />
+      <entry key="MS100" value="1.4908244229165255" />
+      <entry key="MS500" value="2.4558251287615227" />
+      <entry key="S2" value="3.5340369275272794" />
+      <entry key="S5" value="4.246149714826499" />
+      <entry key="S10" value="4.586958365777203" />
+      <entry key="S30" value="4.853335140063573" />
+      <entry key="S60" value="4.925478709610353" />
+      <entry key="M2" value="4.962436962883439" />
+      <entry key="M5" value="4.9849015379827915" />
+      <entry key="M10" value="4.992438504594814" />
+      <entry key="M15" value="4.994956273438103" />
+      <entry key="M30" value="4.997476770854053" />
+      <entry key="H1" value="4.998738043763301" />
+      <entry key="H2" value="4.999368936441021" />
+      <entry key="H4" value="4.999684446857266" />
+      <entry key="D1" value="4.999947404842165" />
+      <entry key="W1" value="4.999992486333349" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -72,23 +72,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="2.1401506868067266E-4" />
-      <entry key="MS500" value="0.18453930071035413" />
-      <entry key="S2" value="0.6554238151559587" />
-      <entry key="S5" value="0.8445179543569319" />
-      <entry key="S10" value="0.9189765798740096" />
-      <entry key="S30" value="0.9722280521993697" />
-      <entry key="S60" value="0.9860162535168321" />
-      <entry key="M2" value="0.992983511200882" />
-      <entry key="M5" value="0.9971874745377142" />
-      <entry key="M10" value="0.9985927470884786" />
-      <entry key="M15" value="0.9990616112144988" />
-      <entry key="M30" value="0.999530695483885" />
-      <entry key="H1" value="0.9997653202046393" />
-      <entry key="H2" value="0.999882653217186" />
-      <entry key="H4" value="0.9999413248872085" />
-      <entry key="D1" value="0.9999902205754451" />
-      <entry key="W1" value="0.999998602933494" />
+      <entry key="MS100" value="1.4524688307918436" />
+      <entry key="MS500" value="2.427965686499843" />
+      <entry key="S2" value="3.3903296430998333" />
+      <entry key="S5" value="4.126519768748196" />
+      <entry key="S10" value="4.510336059609283" />
+      <entry key="S30" value="4.823186462062805" />
+      <entry key="S60" value="4.9097647136353775" />
+      <entry key="M2" value="4.954414889558145" />
+      <entry key="M5" value="4.9816524127453405" />
+      <entry key="M10" value="4.99080716877418" />
+      <entry key="M15" value="4.993867206803678" />
+      <entry key="M30" value="4.9969314817577875" />
+      <entry key="H1" value="4.998465210069779" />
+      <entry key="H2" value="4.999232472282816" />
+      <entry key="H4" value="4.999616202947161" />
+      <entry key="D1" value="4.9999360292136865" />
+      <entry key="W1" value="4.999990861203316" />
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
