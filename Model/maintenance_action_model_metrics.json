@@ -1,0 +1,64 @@
+{
+  "target": "maintenance_action",
+  "model_name": "maintenance_action_model",
+  "n_estimators": 100,
+  "test_size": 0.2,
+  "cv_folds": 5,
+  "train_samples": 160000,
+  "test_samples": 40000,
+  "accuracy": 0.9991,
+  "cv_mean": 0.9988,
+  "cv_std": 0.0003,
+  "classes": [
+    "Inspection recommended",
+    "Maintenance required",
+    "Monitor",
+    "No maintenance needed"
+  ],
+  "per_class_f1": {
+    "Inspection recommended": 0.9988,
+    "Maintenance required": 0.9978,
+    "Monitor": 0.9993,
+    "No maintenance needed": 0.9995
+  },
+  "per_class_precision": {
+    "Inspection recommended": 0.9989,
+    "Maintenance required": 0.9973,
+    "Monitor": 0.9994,
+    "No maintenance needed": 0.9995
+  },
+  "per_class_recall": {
+    "Inspection recommended": 0.9986,
+    "Maintenance required": 0.9982,
+    "Monitor": 0.9993,
+    "No maintenance needed": 0.9996
+  },
+  "confusion_matrix": [
+    [
+      10282,
+      9,
+      5,
+      0
+    ],
+    [
+      6,
+      3346,
+      0,
+      0
+    ],
+    [
+      5,
+      0,
+      15306,
+      6
+    ],
+    [
+      0,
+      0,
+      4,
+      11031
+    ]
+  ],
+  "train_time_s": 40.16,
+  "trained_at": "2026-06-12 15:13:25"
+}

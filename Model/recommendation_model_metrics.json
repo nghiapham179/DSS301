@@ -1,0 +1,79 @@
+{
+  "target": "recommendation",
+  "model_name": "recommendation_model",
+  "n_estimators": 100,
+  "test_size": 0.2,
+  "cv_folds": 5,
+  "train_samples": 160000,
+  "test_samples": 40000,
+  "accuracy": 0.9993,
+  "cv_mean": 0.9992,
+  "cv_std": 0.0001,
+  "classes": [
+    "Charge immediately before continuing operation",
+    "Do not assign next mission; perform maintenance first",
+    "Drone can continue operation under normal monitoring",
+    "Inspect battery and operating conditions before next mission",
+    "Schedule charging soon and monitor next mission"
+  ],
+  "per_class_f1": {
+    "Charge immediately before continuing operation": 0.9994,
+    "Do not assign next mission; perform maintenance first": 0.9984,
+    "Drone can continue operation under normal monitoring": 0.9999,
+    "Inspect battery and operating conditions before next mission": 0.9987,
+    "Schedule charging soon and monitor next mission": 0.999
+  },
+  "per_class_precision": {
+    "Charge immediately before continuing operation": 0.9994,
+    "Do not assign next mission; perform maintenance first": 0.9985,
+    "Drone can continue operation under normal monitoring": 0.9999,
+    "Inspect battery and operating conditions before next mission": 0.9985,
+    "Schedule charging soon and monitor next mission": 0.9992
+  },
+  "per_class_recall": {
+    "Charge immediately before continuing operation": 0.9994,
+    "Do not assign next mission; perform maintenance first": 0.9982,
+    "Drone can continue operation under normal monitoring": 0.9998,
+    "Inspect battery and operating conditions before next mission": 0.9989,
+    "Schedule charging soon and monitor next mission": 0.9989
+  },
+  "confusion_matrix": [
+    [
+      1605,
+      0,
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      3346,
+      0,
+      6,
+      0
+    ],
+    [
+      0,
+      0,
+      21193,
+      4,
+      0
+    ],
+    [
+      1,
+      5,
+      2,
+      10285,
+      3
+    ],
+    [
+      0,
+      0,
+      0,
+      4,
+      3545
+    ]
+  ],
+  "train_time_s": 40.47,
+  "trained_at": "2026-06-12 15:16:18"
+}

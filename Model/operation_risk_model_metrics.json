@@ -1,0 +1,51 @@
+{
+  "target": "operation_risk",
+  "model_name": "operation_risk_model",
+  "n_estimators": 100,
+  "test_size": 0.2,
+  "cv_folds": 5,
+  "train_samples": 160000,
+  "test_samples": 40000,
+  "accuracy": 0.9994,
+  "cv_mean": 0.9992,
+  "cv_std": 0.0002,
+  "classes": [
+    "High",
+    "Low",
+    "Medium"
+  ],
+  "per_class_f1": {
+    "High": 0.9991,
+    "Low": 0.9996,
+    "Medium": 0.9995
+  },
+  "per_class_precision": {
+    "High": 0.9985,
+    "Low": 0.9995,
+    "Medium": 0.9998
+  },
+  "per_class_recall": {
+    "High": 0.9996,
+    "Low": 0.9998,
+    "Medium": 0.9992
+  },
+  "confusion_matrix": [
+    [
+      7497,
+      0,
+      3
+    ],
+    [
+      0,
+      11033,
+      2
+    ],
+    [
+      11,
+      6,
+      21448
+    ]
+  ],
+  "train_time_s": 75.58,
+  "trained_at": "2026-06-12 15:10:11"
+}
