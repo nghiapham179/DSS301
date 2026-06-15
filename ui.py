@@ -132,6 +132,7 @@ def load_css():
         }
         section[data-testid="stSidebar"] * { color: var(--sidebar-text) !important; }
         section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] { display: none !important; }
+        [data-testid="stSidebarNav"] { display: none !important; }
 
         /* ── SIDEBAR NAV ── */
         div[role="radiogroup"] > label {
@@ -264,8 +265,36 @@ def load_css():
         .class-bar-fill  { height: 100%; border-radius: 4px; }
 
         /* ── SYSTEM ── */
-        header[data-testid="stHeader"] { display: none !important; }
-        footer { visibility: hidden !important; }
+        /* Hide Streamlit chrome — header, footer, deploy button, toolbar */
+        header[data-testid="stHeader"]      { display: none !important; }
+        footer                              { visibility: hidden !important; }
+        [data-testid="stToolbar"]           { display: none !important; }
+        [data-testid="stDecoration"]        { display: none !important; }
+        [data-testid="stStatusWidget"]      { display: none !important; }
+        .stDeployButton                     { display: none !important; }
+        #MainMenu                           { display: none !important; }
+        .viewerBadge_container__1QSob       { display: none !important; }
+        .styles_viewerBadge__1yB5_          { display: none !important; }
+
+        /* Reduce top padding so content sits closer to top */
+        [data-testid="stMainBlockContainer"] {
+            padding-top: 1.5rem !important;
+        }
+        section[data-testid="stSidebar"] > div:first-child {
+            padding-top: 1.5rem !important;
+        }
+
+        /* Smoother divider */
+        hr { border-top: 1px solid var(--border) !important; }
+
+        /* Better captions under charts */
+        [data-testid="stCaptionContainer"] {
+            font-size: 0.78rem !important;
+            color: var(--text-secondary) !important;
+            line-height: 1.55 !important;
+            padding: 0 4px !important;
+            margin-top: 4px !important;
+        }
         .js-plotly-plot .plotly .modebar { display: none !important; }
         </style>
         """,
@@ -396,7 +425,7 @@ def render_metric_card(label: str, value: str, note: str = "", delta: str = None
 
 
 def render_metric_with_chart(label: str, value: str, data_points,
-                              color: str = "#4f63d2", delta: str = None):
+                             color: str = "#4f63d2", delta: str = None):
     """Metric card with sparkline trend chart."""
     with st.container(border=True):
         st.metric(label=label, value=value, delta=delta)
@@ -468,8 +497,8 @@ def render_banner(text: str, level: str = "info"):
 # ─────────────────────────────────────────────────────────────
 
 def render_model_accuracy_card(model_name: str, accuracy: float,
-                                cv_mean: float, cv_std: float,
-                                trained_at: str = ""):
+                               cv_mean: float, cv_std: float,
+                               trained_at: str = ""):
     """
     Accuracy card with colour-coded progress bar.
     Green ≥ 90%, Yellow ≥ 75%, Red < 75%.
@@ -493,53 +522,66 @@ def render_model_accuracy_card(model_name: str, accuracy: float,
 
 
 def render_class_f1_table(classes: list, f1_scores: dict,
-                           precision: dict = None, recall: dict = None):
-    """Per-class F1 table — pure Streamlit native, zero HTML."""
+                          precision: dict = None, recall: dict = None):
+    """Per-class F1 table — compact rows with progress bar + score."""
     st.caption("PER-CLASS F1 SCORE")
+
     for cls in classes:
         f1  = float(f1_scores.get(cls, 0.0))
         pct = int(f1 * 100)
 
         if f1 >= 0.90:
-            icon = "🟢"
+            bar_col, txt_col, icon = "#16a34a", "#15803d", "🟢"
         elif f1 >= 0.70:
-            icon = "🟡"
+            bar_col, txt_col, icon = "#d97706", "#b45309", "🟡"
         else:
-            icon = "🔴"
+            bar_col, txt_col, icon = "#dc2626", "#b91c1c", "🔴"
 
         pr  = precision.get(cls, 0) if precision else None
         rec = recall.get(cls, 0)    if recall    else None
+        extra = ""
+        if pr is not None and rec is not None:
+            extra = f"P {pr:.2f}  ·  R {rec:.2f}"
 
-        short = cls if len(cls) <= 26 else cls[:24] + "…"
+        # Truncate long class names
+        short = cls if len(cls) <= 32 else cls[:30] + "…"
 
-        col_name, col_bar, col_val = st.columns([3, 5, 2])
-        with col_name:
-            st.markdown(
-                f"<p style='font-size:0.8rem;font-weight:600;"
-                f"color:#1c1e2e;margin:6px 0 2px;' title='{cls}'>"
-                f"{icon} {short}</p>",
-                unsafe_allow_html=True,
-            )
-        with col_bar:
-            st.progress(pct / 100)
-        with col_val:
-            delta_str = None
-            if pr is not None and rec is not None:
-                delta_str = f"P{pr:.2f} R{rec:.2f}"
-            st.metric(
-                label="",
-                value=f"{f1:.2f}",
-                delta=delta_str,
-                delta_color="off",
-                label_visibility="collapsed",
-            )
+        st.markdown(
+            f"""
+            <div style="display:flex;align-items:center;gap:10px;
+                        padding:5px 0;border-bottom:1px solid #eef0f5;
+                        font-family:Inter,system-ui,sans-serif;">
+                <span style="font-size:0.8rem;font-weight:600;color:#1c1e2e;
+                             min-width:170px;max-width:170px;
+                             white-space:nowrap;overflow:hidden;
+                             text-overflow:ellipsis;" title="{cls}">
+                    {icon} {short}
+                </span>
+                <div style="flex:1;background:#f1f3f9;border-radius:3px;
+                            height:6px;overflow:hidden;min-width:80px;">
+                    <div style="width:{pct}%;background:{bar_col};
+                                height:100%;border-radius:3px;"></div>
+                </div>
+                <span style="font-family:'JetBrains Mono',monospace;
+                             font-size:0.85rem;font-weight:600;
+                             color:{txt_col};min-width:38px;text-align:right;">
+                    {f1:.2f}
+                </span>
+                <span style="font-size:0.7rem;color:#9da3b5;
+                             font-family:'JetBrains Mono',monospace;
+                             min-width:96px;text-align:right;">
+                    {extra}
+                </span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 def render_confusion_matrix_heatmap(cm: list, classes: list) -> go.Figure:
     """
     Plotly confusion matrix heatmap, normalised by row (%).
-    Shows both raw count and % in each cell.
-    Returns Figure — caller calls st.plotly_chart().
+    Long labels are wrapped/abbreviated to avoid overlap.
     """
     import numpy as np
     cm_arr  = np.array(cm)
@@ -547,25 +589,55 @@ def render_confusion_matrix_heatmap(cm: list, classes: list) -> go.Figure:
     row_sum[row_sum == 0] = 1
     cm_norm = cm_arr / row_sum
 
-    text = [[f"{cm_arr[i][j]}<br>{cm_norm[i][j]:.0%}"
+    # Shorten class labels for axis ticks (full name shown in hover)
+    def _short(name, n=18):
+        return name if len(name) <= n else name[:n - 1] + "…"
+
+    short_x = [_short(c, 16) for c in classes]
+    short_y = [_short(c, 22) for c in classes]
+
+    text = [[f"<b>{cm_arr[i][j]}</b><br>{cm_norm[i][j]:.0%}"
              for j in range(len(classes))]
             for i in range(len(classes))]
 
+    # Hover shows full class name
+    hover = [[f"Actual: {classes[i]}<br>Predicted: {classes[j]}"
+              f"<br>Count: {cm_arr[i][j]}<br>Row %: {cm_norm[i][j]:.1%}"
+              for j in range(len(classes))]
+             for i in range(len(classes))]
+
     fig = go.Figure(go.Heatmap(
-        z=cm_norm, x=classes, y=classes,
+        z=cm_norm,
+        x=short_x, y=short_y,
         text=text, texttemplate="%{text}",
-        textfont=dict(size=12, family="JetBrains Mono"),
+        textfont=dict(size=11, family="JetBrains Mono"),
         colorscale=[[0, "#f0f2f7"], [0.5, "#8a97e0"], [1, "#4f63d2"]],
         showscale=False,
+        hoverinfo="text",
+        hovertext=hover,
     ))
+
+    # Dynamic height based on number of classes
+    n = len(classes)
+    height = max(240, 60 + n * 55)
+
     fig.update_layout(
-        xaxis=dict(title="Predicted", tickfont=dict(size=11)),
-        yaxis=dict(title="Actual",    tickfont=dict(size=11), autorange="reversed"),
-        margin=dict(t=10, b=10, l=10, r=10),
-        height=270,
+        xaxis=dict(
+            title=dict(text="Predicted", font=dict(size=11, color="#64697a")),
+            tickfont=dict(size=10, color="#1c1e2e"),
+            tickangle=0 if max(len(c) for c in short_x) <= 12 else -25,
+            side="bottom",
+        ),
+        yaxis=dict(
+            title=dict(text="Actual", font=dict(size=11, color="#64697a")),
+            tickfont=dict(size=10, color="#1c1e2e"),
+            autorange="reversed",
+        ),
+        margin=dict(t=10, b=80, l=120, r=20),
+        height=height,
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Inter, system-ui", color="#64697a", size=11),
+        font=dict(family="Inter, system-ui", color="#64697a", size=10),
     )
     return fig
 
@@ -630,15 +702,108 @@ def render_sidebar_header():
     )
 
 
-def render_sidebar_upgrade_card():
-    """Pro upgrade card in dark sidebar."""
+def render_sidebar_nav(items: list, key: str = "main_nav") -> str:
+    """
+    Render sidebar navigation as styled boxes instead of plain radio buttons.
+
+    items: list of (icon, label) tuples
+    Returns: the label of the currently selected item
+
+    Uses st.session_state to persist selection across reruns.
+    """
+    # Init state
+    if key not in st.session_state:
+        st.session_state[key] = items[0][1]
+
+    current = st.session_state[key]
+
+    # CSS for nav boxes
     st.markdown(
         """
-        <div class="pro-upgrade-card">
-            <h4>Upgrade to Pro</h4>
-            <p>Advanced analytics, unlimited exports &amp; priority support</p>
-            <a href="#" class="pro-upgrade-btn">Get Pro Access →</a>
-        </div>
+        <style>
+            .nav-box-btn {
+                width: 100%;
+                background: rgba(255,255,255,0.04) !important;
+                color: rgba(255,255,255,0.72) !important;
+                border: 1px solid rgba(255,255,255,0.06) !important;
+                border-radius: 10px !important;
+                padding: 11px 14px !important;
+                font-size: 0.88rem !important;
+                font-weight: 500 !important;
+                text-align: left !important;
+                margin-bottom: 6px !important;
+                transition: all .15s ease !important;
+                box-shadow: none !important;
+            }
+            .nav-box-btn:hover {
+                background: rgba(255,255,255,0.08) !important;
+                color: #ffffff !important;
+                border-color: rgba(255,255,255,0.12) !important;
+            }
+            .nav-box-btn.active {
+                background: linear-gradient(135deg, rgba(79,99,210,0.35), rgba(79,99,210,0.18)) !important;
+                color: #ffffff !important;
+                border-color: rgba(79,99,210,0.55) !important;
+                box-shadow: 0 2px 12px rgba(79,99,210,0.18) !important;
+                font-weight: 600 !important;
+            }
+            section[data-testid="stSidebar"] button[kind="secondary"] {
+                background: rgba(255,255,255,0.04) !important;
+                color: rgba(255,255,255,0.72) !important;
+                border: 1px solid rgba(255,255,255,0.06) !important;
+                border-radius: 10px !important;
+                padding: 11px 14px !important;
+                font-size: 0.88rem !important;
+                font-weight: 500 !important;
+                text-align: left !important;
+                margin-bottom: 6px !important;
+                box-shadow: none !important;
+                justify-content: flex-start !important;
+            }
+            section[data-testid="stSidebar"] button[kind="secondary"]:hover {
+                background: rgba(255,255,255,0.08) !important;
+                color: #ffffff !important;
+                border-color: rgba(255,255,255,0.12) !important;
+            }
+            section[data-testid="stSidebar"] button[kind="primary"] {
+                background: linear-gradient(135deg, rgba(79,99,210,0.40), rgba(79,99,210,0.20)) !important;
+                color: #ffffff !important;
+                border: 1px solid rgba(79,99,210,0.55) !important;
+                border-radius: 10px !important;
+                padding: 11px 14px !important;
+                font-size: 0.88rem !important;
+                font-weight: 600 !important;
+                text-align: left !important;
+                margin-bottom: 6px !important;
+                box-shadow: 0 2px 12px rgba(79,99,210,0.20) !important;
+                justify-content: flex-start !important;
+            }
+            section[data-testid="stSidebar"] button p {
+                text-align: left !important;
+                margin: 0 !important;
+            }
+        </style>
         """,
         unsafe_allow_html=True,
     )
+
+    # Render each item as a Streamlit button
+    for i, (icon, label) in enumerate(items):
+        is_active = (label == current)
+        btn_type  = "primary" if is_active else "secondary"
+
+        if st.button(
+                f"{icon}   {label}",
+                key=f"{key}_btn_{i}",
+                use_container_width=True,
+                type=btn_type,
+        ):
+            st.session_state[key] = label
+            st.rerun()
+
+    return current
+
+
+def render_sidebar_upgrade_card():
+    """Stub — kept for backward compatibility, no longer renders anything."""
+    return None
