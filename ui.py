@@ -31,12 +31,17 @@ def load_css():
 
         /* ── TOKENS ── */
         :root {
-            --bg-page:         #f0f2f7;
+            --bg-page:         #eef1f8;
             --bg-card:         #ffffff;
             --bg-card-alt:     #f7f8fc;
             --accent:          #4f63d2;
             --accent-light:    #eef0fb;
             --accent-muted:    #8a97e0;
+            --lime:            #c8e85a;
+            --lime-ink:        #2b3a00;
+            --lime-soft:       rgba(200, 232, 90, 0.16);
+            --hero-bg:         #1b1e30;
+            --hero-card:       #262a44;
             --c-success:       #16a34a;
             --c-success-bg:    #dcfce7;
             --c-warning:       #d97706;
@@ -166,32 +171,6 @@ def load_css():
             font-weight: 600 !important;
         }
 
-        /* ── UPGRADE CARD ── */
-        .pro-upgrade-card {
-            background: rgba(79,99,210,.13);
-            border: 1px solid rgba(79,99,210,.26);
-            border-radius: 14px;
-            padding: 18px 14px;
-            text-align: center;
-            margin-top: 32px;
-        }
-        .pro-upgrade-card h4 { color: #fff !important; font-size: 0.9rem !important; margin: 0 0 4px !important; }
-        .pro-upgrade-card p  { color: rgba(255,255,255,.55) !important; font-size: 0.73rem !important; margin: 0 0 12px !important; line-height: 1.45 !important; }
-        section[data-testid="stSidebar"] a.pro-upgrade-btn {
-            background-color: var(--accent) !important;
-            color: #fff !important;
-            padding: 8px 18px;
-            border-radius: 9px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.8rem;
-            display: inline-block;
-            width: 100%;
-            box-sizing: border-box;
-            transition: opacity .15s ease;
-        }
-        section[data-testid="stSidebar"] a.pro-upgrade-btn:hover { opacity: .85; }
-
         /* ── FORM INPUTS ── */
         [data-testid="stTextInput"] input,
         [data-testid="stNumberInput"] input {
@@ -265,7 +244,6 @@ def load_css():
         .class-bar-fill  { height: 100%; border-radius: 4px; }
 
         /* ── SYSTEM ── */
-        /* Hide Streamlit chrome — header, footer, deploy button, toolbar */
         header[data-testid="stHeader"]      { display: none !important; }
         footer                              { visibility: hidden !important; }
         [data-testid="stToolbar"]           { display: none !important; }
@@ -273,21 +251,11 @@ def load_css():
         [data-testid="stStatusWidget"]      { display: none !important; }
         .stDeployButton                     { display: none !important; }
         #MainMenu                           { display: none !important; }
-        .viewerBadge_container__1QSob       { display: none !important; }
-        .styles_viewerBadge__1yB5_          { display: none !important; }
 
-        /* Reduce top padding so content sits closer to top */
-        [data-testid="stMainBlockContainer"] {
-            padding-top: 1.5rem !important;
-        }
-        section[data-testid="stSidebar"] > div:first-child {
-            padding-top: 1.5rem !important;
-        }
-
-        /* Smoother divider */
+        [data-testid="stMainBlockContainer"] { padding-top: 1.5rem !important; }
+        section[data-testid="stSidebar"] > div:first-child { padding-top: 1.5rem !important; }
         hr { border-top: 1px solid var(--border) !important; }
 
-        /* Better captions under charts */
         [data-testid="stCaptionContainer"] {
             font-size: 0.78rem !important;
             color: var(--text-secondary) !important;
@@ -296,6 +264,68 @@ def load_css():
             margin-top: 4px !important;
         }
         .js-plotly-plot .plotly .modebar { display: none !important; }
+
+        /* ─────────────────────────────────────────────────────────
+           DRONE DSS REDESIGN — animations + new components
+           ───────────────────────────────────────────────────────── */
+        @keyframes droneFadeUp     { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+        @keyframes droneBarRise    { from { transform:scaleY(0); }                  to { transform:scaleY(1); } }
+        @keyframes dronePulse      { 0%,100% { opacity:1; transform:scale(1); }     50% { opacity:.4; transform:scale(.6); } }
+        @keyframes droneGaugeReveal{ from { stroke-dashoffset:0; }                  to { stroke-dashoffset:-101; } }
+
+        /* ── HERO PANEL (dark) ── */
+        .dss-hero {
+            background: var(--hero-bg);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 18px;
+            animation: droneFadeUp .6s cubic-bezier(.2,.7,.3,1) both;
+        }
+        .dss-hero-grid    { display:grid; grid-template-columns:1.45fr 1fr; gap:16px; }
+        .dss-hero-sub     { background:var(--hero-card); border-radius:14px; padding:16px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+        .dss-hero-eyebrow { color:rgba(255,255,255,.55); font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; margin:0 0 6px 0 !important; }
+        .dss-hero-big     { color:#fff; font-size:2.2rem; font-weight:700; margin:0; line-height:1.1; font-family:'JetBrains Mono',monospace; }
+        .dss-hero-unit    { font-size:.9rem; color:rgba(255,255,255,.5); font-weight:500; font-family:'Inter',sans-serif; }
+        .dss-bars         { display:flex; align-items:flex-end; gap:3px; height:64px; margin-top:16px; }
+        .dss-bar          { flex:1; border-radius:2px 2px 0 0; transform-origin:bottom; transform:scaleY(0);
+                            animation: droneBarRise .8s cubic-bezier(.16,1,.3,1) forwards; }
+        .dss-axis         { display:flex; justify-content:space-between; color:rgba(255,255,255,.3); font-size:10px; margin-top:6px; font-family:'JetBrains Mono',monospace; }
+        .dss-gseg         { fill:none; stroke-width:14; stroke-linecap:round; transition: stroke-dasharray 1s ease, stroke-dashoffset 1s ease; }
+        .dss-gcover       { fill:none; stroke:rgba(255,255,255,0.06); stroke-width:14; stroke-linecap:round; }
+        .dss-legend-row   { display:flex; align-items:center; gap:8px; font-size:13px; color:rgba(255,255,255,.7); width:130px; margin-bottom:2px; }
+        .dss-dot          { width:10px; height:10px; border-radius:50%; display:inline-block; }
+        .dss-pulse        { animation: dronePulse 1.4s ease-in-out infinite; }
+
+        /* ── KPI TILES ── */
+        .dss-kpis      { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px; }
+        .dss-kpi       { background:var(--bg-card); border:1px solid var(--border); border-radius:16px;
+                         padding:15px 16px; box-shadow:var(--shadow-sm);
+                         animation: droneFadeUp .6s cubic-bezier(.2,.7,.3,1) both;
+                         transition: transform .25s, box-shadow .25s, border-color .25s; }
+        .dss-kpi:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); border-color:var(--border-hover); }
+        .dss-kpi-label { display:flex; align-items:center; gap:7px; color:var(--text-secondary);
+                         font-size:.7rem; font-weight:600; letter-spacing:.04em; text-transform:uppercase; margin:0; }
+        .dss-kpi-value { font-size:1.5rem; font-weight:700; margin:7px 0 0; color:var(--text-primary);
+                         font-family:'JetBrains Mono',monospace; letter-spacing:-.01em; }
+        .dss-kpi-delta { font-size:.72rem; font-weight:600; margin:3px 0 0; }
+
+        /* ── LIVE BUTTON ── */
+        .dss-live { background:var(--lime); color:var(--lime-ink); border:none; border-radius:11px;
+                    padding:8px 15px; font-size:.78rem; font-weight:700;
+                    display:inline-flex; align-items:center; gap:7px; }
+
+        /* ── STATUS PILL (with dot) ── */
+        .dss-pill { display:inline-flex; align-items:center; gap:6px; padding:4px 11px;
+                    border-radius:999px; font-size:.72rem; font-weight:700; }
+
+        /* ── RECORDS TABLE ── */
+        .dss-table       { width:100%; border-collapse:collapse; font-size:.8rem; }
+        .dss-table th    { color:var(--text-muted); font-size:.66rem; font-weight:700; letter-spacing:.05em;
+                           text-transform:uppercase; text-align:left; padding:8px 6px; }
+        .dss-table td    { padding:11px 6px; border-top:1px solid var(--border); color:var(--text-secondary); }
+        .dss-table td b  { color:var(--text-primary); font-weight:700; }
+        .dss-table tbody tr      { transition: background .15s; }
+        .dss-table tbody tr:hover{ background:var(--bg-card-alt); }
         </style>
         """,
         unsafe_allow_html=True,
@@ -343,8 +373,9 @@ def create_sparkline(data, color: str = "#4f63d2") -> go.Figure:
 # ─────────────────────────────────────────────────────────────
 
 def render_top_nav():
-    """Top bar: title, search input, notification bell, user avatar."""
-    c_title, c_search, c_profile = st.columns([5, 3, 1], vertical_alignment="center")
+    """Top bar: title, live button, drone icon, user avatar."""
+    # Phân chia lại tỷ lệ thành 2 cột (7:3) để đẩy cụm profile sang góc phải
+    c_title, c_profile = st.columns([7, 3], vertical_alignment="center")
 
     with c_title:
         st.markdown(
@@ -363,16 +394,16 @@ def render_top_nav():
             unsafe_allow_html=True,
         )
 
-    with c_search:
-        st.text_input("Search", placeholder="🔍  Search drones, records…",
-                      label_visibility="collapsed")
-
     with c_profile:
         st.markdown(
             """
-            <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;">
-                <span style="font-size:1.05rem;cursor:pointer;color:var(--text-secondary);"
-                      title="Notifications">🔔</span>
+            <div style="display:flex;justify-content:flex-end;align-items:center;gap:14px;">
+                <span class="dss-live" title="Giám sát trực tiếp">
+                    <span class="dss-dot dss-pulse" style="background:var(--lime-ink);"></span>
+                    Giám sát trực tiếp
+                </span>
+                <span style="font-size:1.25rem;cursor:pointer;color:var(--text-secondary);"
+                      title="Quản lý Fleet">🚁</span>
                 <div style="width:34px;height:34px;border-radius:50%;
                             background:var(--accent-light);display:flex;
                             justify-content:center;align-items:center;
@@ -473,6 +504,137 @@ def render_risk_score(score: float, risk_level: str, note: str = ""):
         )
         if note:
             st.markdown(f"<span class='drone-note'>{note}</span>", unsafe_allow_html=True)
+
+
+# ─────────────────────────────────────────────────────────────
+# RENDER — HERO PANEL, KPI TILES, STATUS PILLS, RECORDS TABLE
+# ─────────────────────────────────────────────────────────────
+
+_PILL_COLORS = {
+    "success": ("#dcfce7", "#15803d", "#16a34a"),
+    "warning": ("#fef3c7", "#b45309", "#d97706"),
+    "danger":  ("#fee2e2", "#b91c1c", "#dc2626"),
+    "info":    ("#e0f2fe", "#0369a1", "#0284c7"),
+}
+
+def status_pill_html(label: str, level: str = "info") -> str:
+    """Return a status-pill HTML snippet (coloured background + dot)."""
+    bg, fg, dot = _PILL_COLORS.get(level, _PILL_COLORS["info"])
+    return (f"<span class='dss-pill' style='background:{bg};color:{fg};'>"
+            f"<span class='dss-dot' style='background:{dot};'></span>{label}</span>")
+
+
+def render_hero_panel(total_records: int, avg_score: float,
+                      low_pct: float, med_pct: float, high_pct: float,
+                      bar_heights, delta_str: str = "+3.2% tuần này"):
+    """
+    Dark hero panel — risk-score distribution bars + semicircle risk gauge.
+    Sử dụng kỹ thuật nối chuỗi (Implicit String Concatenation) để vô hiệu hóa lỗi Markdown code block.
+    """
+    bars = ""
+    for i, h in enumerate(bar_heights):
+        h = max(0.0, min(100.0, float(h)))
+        color = "var(--lime)" if h >= 70 else "rgba(255,255,255,.18)"
+        bars += f"<div class='dss-bar' style='height:{h:.0f}%;background:{color};animation-delay:{i * 0.03:.2f}s'></div>"
+
+    off_med  = -low_pct
+    off_high = -(low_pct + med_pct)
+
+    # Nối toàn bộ HTML thành một chuỗi duy nhất, không có khoảng trắng xuống dòng
+    html_str = (
+        '<div class="dss-hero">'
+          '<div class="dss-hero-grid">'
+            '<div class="dss-hero-sub">'
+              '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
+                '<div>'
+                  '<p class="dss-hero-eyebrow">Phân phối điểm rủi ro</p>'
+                  f'<p class="dss-hero-big">{total_records:,} <span class="dss-hero-unit">bản ghi</span></p>'
+                '</div>'
+                f'<span class="dss-pill" style="background:var(--lime-soft);color:var(--lime);">↗ {delta_str}</span>'
+              '</div>'
+              f'<div class="dss-bars">{bars}</div>'
+              '<div class="dss-axis"><span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span></div>'
+            '</div>'
+            '<div class="dss-hero-sub">'
+              '<p class="dss-hero-eyebrow">Tổng quan rủi ro</p>'
+              '<div style="display:flex;align-items:center;gap:12px;margin-top:4px;">'
+                '<svg viewBox="0 0 220 128" width="130" style="overflow:visible;flex-shrink:0;" role="img">'
+                  '<path class="dss-gcover" d="M28,110 A82,82 0 0 1 192,110" pathLength="100" stroke-dasharray="100 100" stroke-dashoffset="0"/>'
+                  f'<path class="dss-gseg" d="M28,110 A82,82 0 0 1 192,110" stroke="#3ad17e" pathLength="100" stroke-dasharray="{low_pct:.1f} 100" stroke-dashoffset="0"/>'
+                  f'<path class="dss-gseg" d="M28,110 A82,82 0 0 1 192,110" stroke="#f0b429" pathLength="100" stroke-dasharray="{med_pct:.1f} 100" stroke-dashoffset="{off_med:.1f}"/>'
+                  f'<path class="dss-gseg" d="M28,110 A82,82 0 0 1 192,110" stroke="#f0584f" pathLength="100" stroke-dasharray="{high_pct:.1f} 100" stroke-dashoffset="{off_high:.1f}"/>'
+                  f'<text x="110" y="98" text-anchor="middle" fill="#fff" font-size="32" font-weight="700" font-family="JetBrains Mono, monospace">{avg_score:.1f}</text>'
+                  '<text x="110" y="118" text-anchor="middle" fill="rgba(255,255,255,.5)" font-size="11" font-weight="600">/ 10 điểm TB</text>'
+                '</svg>'
+                '<div style="display:flex;flex-direction:column;gap:10px;width:100%;">'
+                  f'<div class="dss-legend-row"><span class="dss-dot" style="background:#3ad17e;"></span> An toàn<b style="color:#fff;margin-left:auto;">{low_pct:.0f}%</b></div>'
+                  f'<div class="dss-legend-row"><span class="dss-dot" style="background:#f0b429;"></span> Cảnh báo<b style="color:#fff;margin-left:auto;">{med_pct:.0f}%</b></div>'
+                  f'<div class="dss-legend-row"><span class="dss-dot" style="background:#f0584f;"></span> Nguy hiểm<b style="color:#fff;margin-left:auto;">{high_pct:.0f}%</b></div>'
+                '</div>'
+              '</div>'
+            '</div>'
+          '</div>'
+        '</div>'
+    )
+
+    # Render an toàn 100%, ưu tiên sử dụng st.html nếu bản Streamlit có hỗ trợ
+    if hasattr(st, "html"):
+        st.html(html_str)
+    else:
+        st.markdown(html_str, unsafe_allow_html=True)
+
+
+def render_kpi_tiles(tiles: list):
+    """
+    Bright KPI-tile row (4-up grid). Each tile is a dict:
+      { 'icon': '🔋', 'label': 'PIN TB', 'value': '67%',
+        'delta': '+4% tuần này', 'delta_color': '#16a34a' }
+    """
+    cells = ""
+    for i, t in enumerate(tiles):
+        delta_col = t.get("delta_color", "var(--text-secondary)")
+        cells += (
+            f"<div class='dss-kpi' style='animation-delay:{0.05 + i * 0.07:.2f}s;'>"
+            f"<p class='dss-kpi-label'><span style='color:var(--accent);'>{t.get('icon','')}</span>"
+            f"{t['label']}</p>"
+            f"<p class='dss-kpi-value'>{t['value']}</p>"
+            f"<p class='dss-kpi-delta' style='color:{delta_col};'>{t.get('delta','')}</p>"
+            f"</div>"
+        )
+    st.markdown(f"<div class='dss-kpis'>{cells}</div>", unsafe_allow_html=True)
+
+
+def render_drone_records_table(rows: list, title: str = "Bản ghi drone"):
+    """
+    Records table with coloured status pills.
+    rows: list of dict { 'id', 'battery', 'wind', 'status_label', 'status_level' }
+    """
+    body = ""
+    for r in rows:
+        pill = status_pill_html(r["status_label"], r.get("status_level", "info"))
+        body += (
+            f"<tr><td><b>🚁 {r['id']}</b></td>"
+            f"<td>{r['battery']}</td>"
+            f"<td>{r['wind']}</td>"
+            f"<td>{pill}</td></tr>"
+        )
+    st.markdown(
+        f"""
+        <div style="background:var(--bg-card);border:1px solid var(--border);
+                    border-radius:16px;box-shadow:var(--shadow-sm);padding:16px;
+                    margin-bottom:18px;">
+          <p style="font-size:.95rem;font-weight:700;margin:0 0 12px;
+                    color:var(--text-primary);">{title}
+             <span style="background:var(--bg-card-alt);color:var(--text-secondary);
+                          font-size:.66rem;font-weight:700;padding:2px 8px;
+                          border-radius:7px;margin-left:6px;">{len(rows)}</span></p>
+          <table class="dss-table"><thead><tr>
+            <th>Drone</th><th>Pin TB</th><th>Gió TB</th><th>Rủi ro</th>
+          </tr></thead><tbody>{body}</tbody></table>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 # ─────────────────────────────────────────────────────────────

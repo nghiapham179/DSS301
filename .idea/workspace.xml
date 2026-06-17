@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5d37863f-37d3-4c69-bc24-cf86a053c2ab" name="Changes" comment="" />
+    <list default="true" id="5d37863f-37d3-4c69-bc24-cf86a053c2ab" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/DSS301.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/DSS301.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/core.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -32,7 +37,7 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/nghiapham179/DSS301.git&quot;,
-    &quot;accountId&quot;: &quot;271cc3fc-44ba-4e91-97e7-a09b6f26f2ed&quot;
+    &quot;accountId&quot;: &quot;bd7458f4-93b7-4a47-994c-acd94f0bdf4a&quot;
   }
 }</component>
   <component name="McpProjectServerCommands">
@@ -125,7 +130,7 @@
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;backup-Repo&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Kỳ 7/DSS301/DSS301&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -169,7 +174,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-c59985aa861c-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.24374.152" />
+        <option value="bundled-python-sdk-024ed6589d45-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.23567.174" />
       </set>
     </attachedChunks>
   </component>
@@ -185,6 +190,8 @@
       <workItem from="1781171790957" duration="122000" />
       <workItem from="1781244481152" duration="8640000" />
       <workItem from="1781355116240" duration="77000" />
+      <workItem from="1781677629169" duration="94000" />
+      <workItem from="1781678143967" duration="187000" />
     </task>
     <servers />
   </component>

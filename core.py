@@ -7,7 +7,7 @@ Bao gồm:
   • Helper functions: predict, flight_decision, battery_status, save_custom,
     style_chart, make_radar_chart, translate, …
 
-Tất cả các page trong app_views/ đều import từ đây để tránh lặp code.
+Tất cả các page trong views/ đều import từ đây để tránh lặp code.
 """
 
 import json
