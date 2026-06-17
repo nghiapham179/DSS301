@@ -169,7 +169,7 @@ def _render_form_tab():
         label_visibility="collapsed",
         help="Chọn 1 tình huống → các ô bên dưới tự động điền theo phiếu mẫu. "
              "Bạn vẫn có thể chỉnh tay sau khi áp dụng.",
-        )
+    )
 
     # If template selected, get defaults; otherwise use system defaults
     if template_choice != NONE_OPTION:
@@ -263,7 +263,7 @@ def _render_form_tab():
     render_banner(flight_reason, flight_lv)
     render_banner(rec_pred, risk_to_level(risk_pred))
 
-    with st.expander("📄 Xem bản ghi vừa lưu (18 cột)"):
+    with st.expander("📄 Xem bản ghi vừa lưu (49 cột chuẩn)"):
         st.dataframe(saved.tail(1), use_container_width=True)
         st.caption(
             f"File: Data/custom_drone_data.csv  ·  "
