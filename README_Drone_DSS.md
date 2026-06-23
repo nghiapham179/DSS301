@@ -1,104 +1,70 @@
-# Drone DSS - Decision Support System for Drone Operation and Maintenance
+# 🚁 Drone DSS — Hệ Thống Hỗ Trợ Ra Quyết Định Bảo Hành & Vận Hành Drone
 
-## 1. Project Overview
-
-**Drone DSS** is a Decision Support System prototype designed to support **drone operation and maintenance decisions**.
-
-The system analyzes drone operational data such as battery level, flight time, signal strength, wind speed, GPS accuracy, altitude, speed, temperature, humidity, and pressure. Based on these inputs, the system predicts:
-
-- Operation risk level
-- Maintenance action
-- Battery status
-- Flight status
-- Final recommendation for the operator
-
-This project is built for the **DSS301** course and uses **Python**, **Streamlit**, **Scikit-learn**, **Random Forest Classifier**, and **Plotly**.
+> **Môn học:** DSS301 — Decision Support Systems  
+> **Trường:** FPT University  
+> **Công nghệ:** Python · scikit-learn · Streamlit · Plotly  
 
 ---
 
-## 2. Main Features
+## Mô tả dự án
 
-### 2.1 Dashboard
+**Drone DSS** là một hệ thống hỗ trợ ra quyết định (Decision Support System) ứng dụng Machine Learning để phân tích dữ liệu cảm biến UAV (drone) theo thời gian thực, từ đó đưa ra các khuyến nghị về:
 
-The dashboard provides an overview of the drone dataset, including:
+- **Mức độ rủi ro vận hành** — Low / Medium / High
+- **Hành động bảo trì** — Monitor / Inspection recommended / Maintenance required / No maintenance needed
+- **Khuyến nghị cụ thể** — 5 cấp độ từ "tiếp tục bay" đến "không bay, cần bảo trì ngay"
+- **Trạng thái bay** — Đủ điều kiện bay / Bay kèm giám sát / Quay về trạm / Yêu cầu bảo trì / Cấm bay
 
-- Total number of records
-- Number of drones
-- Average risk score
-- Percentage of high-risk cases
-- Risk score distribution
-- Maintenance action distribution
-- Battery level versus wind speed analysis
-- Average risk score by drone
+### Dữ liệu
 
-### 2.2 Prediction Page
-
-The prediction page allows users to adjust drone operation parameters using sliders.
-
-The system then predicts:
-
-- Operation risk
-- Maintenance action
-- Battery status
-- Flight status
-- Final recommendation
-
-### 2.3 Manual Drone Data Input
-
-The manual input page allows operators to enter drone data directly through a form.
-
-After clicking **Predict**, the system will:
-
-1. Predict the operation risk.
-2. Predict the maintenance action.
-3. Determine the battery status.
-4. Determine the flight status.
-5. Generate the final recommendation.
-6. Save the input and prediction result into:
-
-```text
-Data/custom_drone_data.csv
-```
-
-### 2.4 Drone Analysis
-
-The drone analysis page allows users to select a specific drone and view:
-
-- Number of records
-- Average risk score
-- High-risk percentage
-- Average battery level
-- Risk score distribution
-- Flight time versus battery level
-- Maintenance action distribution
-
----
-
-## 3. Technologies Used
-
-| Technology | Purpose |
+| Thông số | Giá trị |
 |---|---|
-| Python | Main programming language |
-| Streamlit | Web application interface |
-| Pandas | Data processing |
-| NumPy | Numerical processing |
-| Scikit-learn | Machine learning model training |
-| Random Forest Classifier | Prediction model |
-| Joblib | Saving and loading trained models |
-| Plotly | Interactive charts and visualizations |
-| OpenPyXL | Excel file support |
+| Tổng bản ghi | 200,000 |
+| Số drone | 10 |
+| Số cột | 24 |
+| Cột đầu vào (features) | 10 cột cảm biến |
+| Cột đầu ra (targets) | 3 model ML + 1 rule engine |
+
+**10 features đầu vào:**
+`battery_level` · `flight_time` · `signal_strength` · `temperature` · `wind_speed` · `gps_accuracy` · `altitude` · `speed` · `humidity` · `pressure`
+
+**Phân phối nhãn:**
+
+| operation_risk | Số lượng | Tỷ lệ |
+|---|---|---|
+| Medium | 107,323 | 53.7% |
+| Low | 55,175 | 27.6% |
+| High | 37,502 | 18.8% |
+
+### Mô hình ML
+
+Hệ thống sử dụng **Random Forest Classifier** với các tham số:
+- `n_estimators = 100`
+- `class_weight = "balanced"` — xử lý mất cân bằng nhãn
+- `stratify = y` — đảm bảo tập test có cùng tỷ lệ class
+- Test size: 20% (40,000 bản ghi)
+
+**Kết quả (accuracy trên tập test):**
+
+| Model | Target | Accuracy |
+|---|---|---|
+| Model 1 | `operation_risk` | ~99.9% |
+| Model 2 | `maintenance_action` | ~99.9% |
+| Model 3 | `recommendation` | ~99.9% |
 
 ---
 
-## 4. Project Structure
+## Cấu trúc thư mục
 
-```text
+```
 DSS301/
+├── app.py                        # File chạy chính — Streamlit app
+├── train_model.py                # Script train và lưu model
+├── ui.py                         # CSS và UI components
 │
 ├── Data/
-│   ├── drone_data.csv
-│   ├── drone_data_clean.csv
-│   └── custom_drone_data.csv
+│   ├── drone_data_clean.csv      # Dataset chính (200,000 records)
+│   └── custom_drone_data.csv     # Dữ liệu người dùng nhập (tự tạo)
 │
 ├── Model/
 │   ├── operation_risk_model.joblib
@@ -108,329 +74,196 @@ DSS301/
 │   ├── recommendation_model.joblib
 │   └── recommendation_model_label_encoder.joblib
 │
-├── app.py
-├── train_model.py
-├── ui.py
-├── Requirement.txt
+├── requirements.txt
 └── README.md
 ```
 
-### Folder and File Explanation
+---
 
-| File / Folder | Description |
-|---|---|
-| `Data/` | Contains the drone datasets |
-| `Data/drone_data_clean.csv` | Main cleaned dataset used by the system |
-| `Data/custom_drone_data.csv` | Stores manually entered drone data and prediction results |
-| `Model/` | Stores trained machine learning models |
-| `app.py` | Main Streamlit application |
-| `train_model.py` | Trains and saves machine learning models |
-| `ui.py` | Contains UI styling and reusable UI components |
-| `Requirement.txt` | Lists required Python libraries |
-| `README.md` | Project setup and usage guide |
+## Hướng dẫn cài đặt & chạy
+
+### Yêu cầu hệ thống
+
+- Python **3.9 trở lên** (khuyến nghị 3.11)
+- PyCharm hoặc VS Code
+- RAM tối thiểu 4GB (do dataset 200K records)
+
+> ⚠️ **Lưu ý Python 3.14:** Nếu dùng Python 3.14, joblib có thể gặp lỗi parallel processing. Khuyến nghị dùng Python 3.11.
 
 ---
 
-## 5. Requirements
+### Bước 1 — Clone hoặc tải repo
 
-Before running the project, make sure the following software is installed:
-
-- Python 3.10 or later
-- PyCharm or Visual Studio Code
-- Google Chrome, Microsoft Edge, or Firefox
-- Git, if cloning the project from GitHub
-
-Required Python libraries:
-
-```text
-pandas
-numpy
-scikit-learn
-joblib
-streamlit
-plotly
-openpyxl
-```
-
----
-
-## 6. How to Download the Project
-
-### Option 1: Download ZIP
-
-1. Open the GitHub repository.
-2. Click the **Code** button.
-3. Select **Download ZIP**.
-4. Extract the ZIP file.
-5. Open the project folder using PyCharm or Visual Studio Code.
-
-### Option 2: Clone with Git
-
-Open Terminal, Command Prompt, PowerShell, or Git Bash and run:
-
+**Cách 1 — Git clone:**
 ```bash
-git clone <your-github-repository-link>
-```
-
-Then move into the project folder:
-
-```bash
+git clone https://github.com/nghiapham179/DSS301.git
 cd DSS301
 ```
 
+**Cách 2 — Download ZIP:**
+1. Vào `https://github.com/nghiapham179/DSS301`
+2. Click **Code → Download ZIP**
+3. Giải nén vào thư mục bất kỳ
+
 ---
 
-## 7. Installation
+### Bước 2 — Mở project trong PyCharm
 
-Open the terminal inside the project folder and install the required libraries.
+1. Mở PyCharm → **File → Open** → chọn thư mục `DSS301`
+2. PyCharm sẽ tự nhận project
 
-### Install directly
+---
+
+### Bước 3 — Cài thư viện
+
+Mở **Terminal** trong PyCharm (tab dưới cùng) và chạy:
 
 ```bash
-python -m pip install pandas numpy scikit-learn joblib streamlit plotly openpyxl
+pip install streamlit pandas scikit-learn joblib plotly numpy
 ```
 
-### Or install from `Requirement.txt`
-
+Kiểm tra cài thành công:
 ```bash
-python -m pip install -r Requirement.txt
-```
-
-Recommended `Requirement.txt` content:
-
-```text
-pandas
-numpy
-scikit-learn
-joblib
-streamlit
-plotly
-openpyxl
+python -c "import streamlit, sklearn, joblib, plotly; print('OK')"
 ```
 
 ---
 
-## 8. Train the Models
+### Bước 4 — Đặt file data đúng chỗ
 
-Before running the application, train the models by running:
+Đảm bảo file `drone_data_clean.csv` nằm trong thư mục `Data/`:
+
+```
+DSS301/
+└── Data/
+    └── drone_data_clean.csv   ← file này phải có
+```
+
+Nếu chưa có thư mục `Data/`, tạo thủ công trong PyCharm:
+- Chuột phải vào project → **New → Directory** → đặt tên `Data`
+- Kéo file CSV vào thư mục `Data/`
+
+---
+
+### Bước 5 — Train model
+
+Chạy file `train_model.py` để sinh các file `.joblib`:
 
 ```bash
 python train_model.py
 ```
 
-After training, the following files should appear in the `Model/` folder:
-
-```text
-operation_risk_model.joblib
-operation_risk_model_label_encoder.joblib
-maintenance_action_model.joblib
-maintenance_action_model_label_encoder.joblib
-recommendation_model.joblib
-recommendation_model_label_encoder.joblib
+Khi chạy xong sẽ thấy:
+```
+DRONE DSS MODEL TRAINING
+Đã đọc data: 200000 dòng, 24 cột
+...
+Accuracy: 0.9991
+...
+HOÀN THÀNH TRAIN MODEL
+Các file đã được lưu vào thư mục Model/
 ```
 
-If these files already exist, you can skip this step unless the dataset or training logic has changed.
+Thư mục `Model/` sẽ xuất hiện với 6 file `.joblib`.
+
+> ⏱️ Thời gian train: khoảng **3–8 phút** tùy cấu hình máy.
 
 ---
 
-## 9. Run the Application
+### Bước 6 — Chạy ứng dụng
 
-Run the Streamlit app using:
+Trong Terminal của PyCharm:
 
 ```bash
-python -m streamlit run app.py
+streamlit run app.py
 ```
 
-The application will open in your browser.
-
-If it does not open automatically, copy the local URL from the terminal, usually:
-
-```text
+Trình duyệt sẽ tự động mở tại:
+```
 http://localhost:8501
 ```
 
-Then paste it into your browser.
+Nếu trình duyệt không tự mở, copy URL trên vào trình duyệt thủ công.
 
 ---
 
-## 10. Model Explanation
+## Hướng dẫn sử dụng
 
-The project uses three machine learning models.
+### Trang Dashboard
 
-| Model | Output | Purpose |
+Tổng quan toàn bộ fleet drone:
+- **Risk Score tổng hợp** — gauge chart hiển thị mức rủi ro trung bình
+- **4 thẻ KPI** — tổng bản ghi, số drone, risk score TB, tỷ lệ High Risk
+- **Phân phối Risk Score** — histogram theo từng mức rủi ro
+- **Maintenance Action** — bar chart các hành động bảo trì cần thực hiện
+- **Battery vs Wind Speed** — scatter plot tương quan pin và gió
+- **Risk Score theo Drone** — so sánh rủi ro giữa các drone
+
+### Trang Dự đoán
+
+Nhập thông số cảm biến thực tế để nhận quyết định ngay:
+
+1. Kéo **10 thanh slider** nhập giá trị cảm biến
+2. Hệ thống **tự động dự đoán** (không cần nhấn nút)
+3. Kết quả hiển thị:
+   - Gauge chart **Risk Score ước tính**
+   - **Mức rủi ro** + độ tin cậy của model
+   - **Hành động bảo trì** cần thực hiện
+   - **Tình trạng pin** (Tốt / Trung Bình / Yếu)
+   - **Trạng thái bay** (5 cấp độ)
+   - **Khuyến nghị** cuối cùng
+
+### Trang Nhập dữ liệu Drone
+
+Nhập số liệu cụ thể (thay vì slider):
+
+1. Điền **Drone ID** (ví dụ: `Drone_Custom_001`)
+2. Nhập 10 thông số vào các ô number input
+3. Nhấn **Dự đoán**
+4. Kết quả được hiển thị và **tự động lưu** vào `Data/custom_drone_data.csv`
+
+### Trang Phân tích Drone
+
+Phân tích chi tiết từng drone:
+
+1. Chọn drone từ dropdown
+2. Xem **4 thẻ KPI** của drone đó
+3. Xem **histogram Risk Score** của drone
+4. Xem **scatter plot** Flight Time vs Battery Level
+5. Xem **donut chart** phân bố Maintenance Action
+
+---
+
+## Xử lý lỗi thường gặp
+
+| Lỗi | Nguyên nhân | Cách sửa |
 |---|---|---|
-| `operation_risk_model` | `operation_risk` | Predicts the operational risk level |
-| `maintenance_action_model` | `maintenance_action` | Predicts the required maintenance action |
-| `recommendation_model` | `recommendation` | Provides the final recommendation |
-
-The models use the following 10 input features:
-
-```text
-battery_level
-flight_time
-signal_strength
-temperature
-wind_speed
-gps_accuracy
-altitude
-speed
-humidity
-pressure
-```
+| `No module named 'streamlit'` | Thư viện cài vào Python hệ thống, không vào PyCharm | Vào **Settings → Python Interpreter → Add System Interpreter**, chọn đúng `python.exe` đã cài thư viện |
+| `FileNotFoundError: Data/drone_data_clean.csv` | File CSV chưa có trong thư mục `Data/` | Tạo thư mục `Data/` và copy file CSV vào |
+| `FileNotFoundError: Model/...joblib` | Chưa chạy `train_model.py` | Chạy `python train_model.py` trước |
+| Trình duyệt không tự mở | Streamlit không detect browser | Copy `http://localhost:8501` vào trình duyệt thủ công |
+| Train chạy rất chậm | n_jobs=-1 không hoạt động trên một số máy | Thay `n_jobs=-1` thành `n_jobs=1` trong `train_model.py` |
 
 ---
 
-## 11. Flight Status Logic
+## Công nghệ sử dụng
 
-In addition to machine learning predictions, the system uses a rule-based decision layer to make the result easier for operators to understand.
-
-### Flight Status Categories
-
-| Flight Status | Meaning |
-|---|---|
-| `Đủ Điều Kiện Bay` | The drone is safe to fly |
-| `Bay Kèm Giám Sát` | The drone can fly but requires close monitoring |
-| `Quay Về Trạm` | The drone should return to base |
-| `Cấm Bay` | The drone should not fly |
-| `Yêu Cầu Bảo Trì` | The drone requires inspection or maintenance |
-
-### Risk Conditions
-
-| Parameter | Warning / Dangerous Condition |
-|---|---|
-| Battery level | Below 20% is dangerous |
-| Signal strength | Below 35% is dangerous |
-| Wind speed | Above 35 is dangerous |
-| GPS accuracy | Above 10 is dangerous |
-| Temperature | Above 45°C or below -10°C is dangerous |
-| Flight time | Above 40 minutes requires monitoring |
-| Altitude | Above 350 meters requires monitoring |
-| Speed | Above 75 requires monitoring |
+| Thư viện | Phiên bản | Mục đích |
+|---|---|---|
+| `streamlit` | ≥ 1.35 | Web UI framework |
+| `scikit-learn` | ≥ 1.3 | Random Forest, LabelEncoder |
+| `pandas` | ≥ 2.0 | Xử lý dữ liệu |
+| `joblib` | ≥ 1.3 | Lưu/load model |
+| `plotly` | ≥ 5.0 | Biểu đồ interactive |
+| `numpy` | ≥ 1.24 | Tính toán số học |
 
 ---
 
-## 12. Custom Data Saving
+## Tác giả
 
-When users enter drone data manually and click **Predict**, the system saves the input and prediction result into:
-
-```text
-Data/custom_drone_data.csv
-```
-
-The saved file includes:
-
-```text
-drone_id
-battery_level
-flight_time
-signal_strength
-temperature
-wind_speed
-gps_accuracy
-altitude
-speed
-humidity
-pressure
-operation_risk
-maintenance_action
-recommendation
-battery_status
-flight_status
-flight_reason
-created_at
-```
-
-Each new prediction is appended as a new row.
+**Nhóm DSS301 — FPT University**  
+GitHub: [https://github.com/nghiapham179/DSS301](https://github.com/nghiapham179/DSS301)
 
 ---
 
-## 13. Common Errors and Fixes
-
-### Error 1: `streamlit is not recognized`
-
-Use this command instead:
-
-```bash
-python -m streamlit run app.py
-```
-
-If Streamlit is not installed, run:
-
-```bash
-python -m pip install streamlit
-```
-
-### Error 2: Missing model files
-
-If the app cannot find `.joblib` files, run:
-
-```bash
-python train_model.py
-```
-
-Then run the app again:
-
-```bash
-python -m streamlit run app.py
-```
-
-### Error 3: Dataset not found
-
-Make sure the dataset is located at:
-
-```text
-Data/drone_data_clean.csv
-```
-
-The folder name must be `Data`, not `data`.
-
-### Error 4: `pandas.errors.EmptyDataError: No columns to parse from file`
-
-This may happen when `Data/custom_drone_data.csv` exists but is empty.
-
-Quick fix:
-
-1. Delete `Data/custom_drone_data.csv`.
-2. Run the app again.
-3. Submit a new manual prediction.
-
-Recommended code fix:
-
-Make sure the `save_custom_drone_data()` function handles empty files before reading the CSV.
-
----
-
-## 14. Recommended Running Order
-
-### First-time setup
-
-```bash
-python -m pip install -r Requirement.txt
-python train_model.py
-python -m streamlit run app.py
-```
-
-### Later runs
-
-If models are already trained:
-
-```bash
-python -m streamlit run app.py
-```
-
-Only retrain the models when the dataset or training code changes.
-
----
-
-## 15. Notes
-
-This project is a prototype for the DSS301 course.
-
-The goal is not to fully automate drone operation, but to support human decision-making by providing:
-
-- Risk prediction
-- Maintenance suggestion
-- Flight status assessment
-- Final operational recommendation
-
-The system helps drone operators make faster, more consistent, and more explainable decisions during drone operation and maintenance.
+*README này được tạo cho mục đích học thuật — môn DSS301, FPT University.*
