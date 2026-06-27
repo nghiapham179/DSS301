@@ -1,14 +1,16 @@
 {
   "target": "recommendation",
   "model_name": "recommendation_model",
+  "relabeling": "probabilistic_v2",
+  "boundary_flip_rate": 0.2,
+  "clear_flip_rate": 0.02,
+  "noise_seed": 42,
   "n_estimators": 100,
   "test_size": 0.2,
   "cv_folds": 5,
   "train_samples": 160000,
   "test_samples": 40000,
-  "accuracy": 0.9993,
-  "cv_mean": 0.9992,
-  "cv_std": 0.0001,
+  "trained_at": "2026-06-25 18:38:58",
   "classes": [
     "Charge immediately before continuing operation",
     "Do not assign next mission; perform maintenance first",
@@ -16,64 +18,99 @@
     "Inspect battery and operating conditions before next mission",
     "Schedule charging soon and monitor next mission"
   ],
+  "accuracy": 0.885,
+  "precision": 0.887,
+  "recall": 0.885,
+  "f1": 0.8805,
+  "rmse": 0.6391,
+  "mae": 0.1969,
+  "cv_mean": 0.884,
+  "cv_std": 0.0012,
   "per_class_f1": {
-    "Charge immediately before continuing operation": 0.9994,
-    "Do not assign next mission; perform maintenance first": 0.9984,
-    "Drone can continue operation under normal monitoring": 0.9999,
-    "Inspect battery and operating conditions before next mission": 0.9987,
-    "Schedule charging soon and monitor next mission": 0.999
+    "Charge immediately before continuing operation": 0.678,
+    "Do not assign next mission; perform maintenance first": 0.839,
+    "Drone can continue operation under normal monitoring": 0.9248,
+    "Inspect battery and operating conditions before next mission": 0.8917,
+    "Schedule charging soon and monitor next mission": 0.8144
   },
   "per_class_precision": {
-    "Charge immediately before continuing operation": 0.9994,
-    "Do not assign next mission; perform maintenance first": 0.9985,
-    "Drone can continue operation under normal monitoring": 0.9999,
-    "Inspect battery and operating conditions before next mission": 0.9985,
-    "Schedule charging soon and monitor next mission": 0.9992
+    "Charge immediately before continuing operation": 0.8808,
+    "Do not assign next mission; perform maintenance first": 0.9562,
+    "Drone can continue operation under normal monitoring": 0.8812,
+    "Inspect battery and operating conditions before next mission": 0.8702,
+    "Schedule charging soon and monitor next mission": 0.8853
   },
   "per_class_recall": {
-    "Charge immediately before continuing operation": 0.9994,
-    "Do not assign next mission; perform maintenance first": 0.9982,
-    "Drone can continue operation under normal monitoring": 0.9998,
-    "Inspect battery and operating conditions before next mission": 0.9989,
-    "Schedule charging soon and monitor next mission": 0.9989
+    "Charge immediately before continuing operation": 0.5511,
+    "Do not assign next mission; perform maintenance first": 0.7473,
+    "Drone can continue operation under normal monitoring": 0.9729,
+    "Inspect battery and operating conditions before next mission": 0.9143,
+    "Schedule charging soon and monitor next mission": 0.7541
   },
   "confusion_matrix": [
     [
-      1605,
-      0,
-      0,
-      1,
-      0
+      1374,
+      35,
+      639,
+      341,
+      104
     ],
     [
-      0,
-      3346,
-      0,
-      6,
-      0
+      51,
+      3209,
+      615,
+      334,
+      85
     ],
     [
-      0,
-      0,
-      21193,
-      4,
-      0
+      39,
+      28,
+      18676,
+      352,
+      101
     ],
     [
-      1,
-      5,
-      2,
-      10285,
-      3
+      50,
+      55,
+      615,
+      8971,
+      121
     ],
     [
-      0,
-      0,
-      0,
-      4,
-      3545
+      46,
+      29,
+      648,
+      311,
+      3171
     ]
   ],
-  "train_time_s": 35.24,
-  "trained_at": "2026-06-15 11:54:49"
+  "train_time_s": 34.28,
+  "comparison": {
+    "Decision Tree": {
+      "accuracy": 0.8807,
+      "precision": 0.8814,
+      "recall": 0.8807,
+      "f1": 0.8762,
+      "rmse": 0.6513,
+      "mae": 0.2044,
+      "params": {
+        "max_depth": 10,
+        "min_samples_split": 5,
+        "random_state": 42
+      }
+    },
+    "Logistic Regression": {
+      "accuracy": 0.6662,
+      "precision": 0.6546,
+      "recall": 0.6662,
+      "f1": 0.6264,
+      "rmse": 1.1197,
+      "mae": 0.5764,
+      "params": {
+        "solver": "lbfgs",
+        "max_iter": "1000",
+        "random_state": "42"
+      }
+    }
+  }
 }

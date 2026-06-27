@@ -4,19 +4,14 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5d37863f-37d3-4c69-bc24-cf86a053c2ab" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/DSS301.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/DSS301.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/core.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui.py" afterDir="false" />
-    </list>
+    <list default="true" id="5d37863f-37d3-4c69-bc24-cf86a053c2ab" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="40" />
+    <option name="cachedIndexableFilesCount" value="36" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -37,7 +32,7 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/nghiapham179/DSS301.git&quot;,
-    &quot;accountId&quot;: &quot;bd7458f4-93b7-4a47-994c-acd94f0bdf4a&quot;
+    &quot;accountId&quot;: &quot;271cc3fc-44ba-4e91-97e7-a09b6f26f2ed&quot;
   }
 }</component>
   <component name="McpProjectServerCommands">
@@ -46,23 +41,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0000037930659647" />
-      <entry key="S2" value="1.0742025350956994" />
-      <entry key="S5" value="1.5355220808430463" />
-      <entry key="S10" value="2.0349260512131724" />
-      <entry key="S30" value="2.6311981348433964" />
-      <entry key="S60" value="2.9546199245439873" />
-      <entry key="M2" value="3.3460280198116306" />
-      <entry key="M5" value="3.958683453711925" />
-      <entry key="M10" value="4.3666310753403454" />
-      <entry key="M15" value="4.546515328463649" />
-      <entry key="M30" value="4.755698538477662" />
-      <entry key="H1" value="4.873050738299851" />
-      <entry key="H2" value="4.935270266237044" />
-      <entry key="H4" value="4.967314129760293" />
-      <entry key="D1" value="4.994507143519813" />
-      <entry key="W1" value="4.99921419071652" />
+      <entry key="MS100" value="1.5044799299792482" />
+      <entry key="MS500" value="3.157069779197477" />
+      <entry key="S2" value="6.587911489135935" />
+      <entry key="S5" value="9.131470071704154" />
+      <entry key="S10" value="10.40779149224608" />
+      <entry key="S30" value="11.429196536682477" />
+      <entry key="S60" value="11.709241910051501" />
+      <entry key="M2" value="11.853254238680833" />
+      <entry key="M5" value="11.949992213202128" />
+      <entry key="M10" value="12.765102375419731" />
+      <entry key="M15" value="15.527922148061188" />
+      <entry key="M30" value="27.942630934875126" />
+      <entry key="H1" value="47.21661706581545" />
+      <entry key="H2" value="67.97515650043395" />
+      <entry key="H4" value="85.76453093464428" />
+      <entry key="D1" value="108.25052373393267" />
+      <entry key="W1" value="113.14733129319032" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -84,23 +79,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9592641193252643" />
-      <entry key="MS500" value="0.9917197117042347" />
-      <entry key="S2" value="1.0675128862769685" />
-      <entry key="S5" value="1.520952526885379" />
-      <entry key="S10" value="2.021094956689337" />
-      <entry key="S30" value="2.623989549969193" />
-      <entry key="S60" value="2.950382863432263" />
-      <entry key="M2" value="3.343585194274498" />
-      <entry key="M5" value="3.9575483563485814" />
-      <entry key="M10" value="4.366019466466432" />
-      <entry key="M15" value="4.546095448417972" />
-      <entry key="M30" value="4.755481766332007" />
-      <entry key="H1" value="4.872940480528366" />
-      <entry key="H2" value="4.935214646900669" />
-      <entry key="H4" value="4.967286194522911" />
-      <entry key="D1" value="4.994502469948963" />
-      <entry key="W1" value="4.9992135226267145" />
+      <entry key="MS100" value="1.4082707622354105" />
+      <entry key="MS500" value="3.098075011944843" />
+      <entry key="S2" value="6.559734818274627" />
+      <entry key="S5" value="9.116014208140443" />
+      <entry key="S10" value="10.399001439450878" />
+      <entry key="S30" value="11.425982284689109" />
+      <entry key="S60" value="11.70759577225341" />
+      <entry key="M2" value="11.852421135887473" />
+      <entry key="M5" value="11.949656285440796" />
+      <entry key="M10" value="12.764923265025207" />
+      <entry key="M15" value="15.527777169936979" />
+      <entry key="M30" value="27.942493040910204" />
+      <entry key="H1" value="47.216469550267206" />
+      <entry key="H2" value="67.97501829591799" />
+      <entry key="H4" value="85.76442827439564" />
+      <entry key="D1" value="108.25049891622749" />
+      <entry key="W1" value="113.1473275005185" />
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
@@ -130,7 +125,7 @@
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;backup-Repo&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Kỳ 7/DSS301/DSS301&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -174,7 +169,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-024ed6589d45-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.23567.174" />
+        <option value="bundled-python-sdk-c59985aa861c-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.24374.152" />
       </set>
     </attachedChunks>
   </component>
@@ -192,6 +187,7 @@
       <workItem from="1781355116240" duration="77000" />
       <workItem from="1781677629169" duration="94000" />
       <workItem from="1781678143967" duration="187000" />
+      <workItem from="1782587324481" duration="90000" />
     </task>
     <servers />
   </component>

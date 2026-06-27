@@ -526,64 +526,86 @@ def status_pill_html(label: str, level: str = "info") -> str:
 
 def render_hero_panel(total_records: int, avg_score: float,
                       low_pct: float, med_pct: float, high_pct: float,
-                      bar_heights, delta_str: str = "+3.2% tuần này"):
+                      bar_heights, counts=None, delta_str: str = "+3.2% tuần này"):
     """
     Dark hero panel — risk-score distribution bars + semicircle risk gauge.
-    Sử dụng kỹ thuật nối chuỗi (Implicit String Concatenation) để vô hiệu hóa lỗi Markdown code block.
     """
+    # Tạo các thanh cột hiển thị (Có kèm Tooltip hiển thị số lượng)
     bars = ""
     for i, h in enumerate(bar_heights):
-        h = max(0.0, min(100.0, float(h)))
+        h = max(2.0, min(100.0, float(h)))
         color = "var(--lime)" if h >= 70 else "rgba(255,255,255,.18)"
-        bars += f"<div class='dss-bar' style='height:{h:.0f}%;background:{color};animation-delay:{i * 0.03:.2f}s'></div>"
+
+        # Nếu có mảng counts truyền vào, tạo tooltip
+        tooltip = f" title='Điểm {i}: {counts[i]:,} bản ghi'" if counts else ""
+
+        bars += f"<div class='dss-bar' style='height:{h:.0f}%;background:{color};animation-delay:{i * 0.03:.2f}s'{tooltip}></div>"
+
+    # Tạo nhãn trục X tương ứng
+    axis_labels = ""
+    for i in range(len(bar_heights)):
+        label = str(i) if i % 2 == 0 else ""
+        axis_labels += f"<span style='flex:1; text-align:center;'>{label}</span>"
 
     off_med  = -low_pct
     off_high = -(low_pct + med_pct)
 
-    # Nối toàn bộ HTML thành một chuỗi duy nhất, không có khoảng trắng xuống dòng
     html_str = (
+        # CSS: Thêm hiệu ứng sáng lên và đổi trỏ chuột khi hover vào cột
+        '<style>.dss-bar:hover { filter: brightness(1.35); cursor: pointer; }</style>'
+
         '<div class="dss-hero">'
-          '<div class="dss-hero-grid">'
-            '<div class="dss-hero-sub">'
-              '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
-                '<div>'
-                  '<p class="dss-hero-eyebrow">Phân phối điểm rủi ro</p>'
-                  f'<p class="dss-hero-big">{total_records:,} <span class="dss-hero-unit">bản ghi</span></p>'
-                '</div>'
-                f'<span class="dss-pill" style="background:var(--lime-soft);color:var(--lime);">↗ {delta_str}</span>'
-              '</div>'
-              f'<div class="dss-bars">{bars}</div>'
-              '<div class="dss-axis"><span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span></div>'
-            '</div>'
-            '<div class="dss-hero-sub">'
-              '<p class="dss-hero-eyebrow">Tổng quan rủi ro</p>'
-              '<div style="display:flex;align-items:center;gap:12px;margin-top:4px;">'
-                '<svg viewBox="0 0 220 128" width="130" style="overflow:visible;flex-shrink:0;" role="img">'
-                  '<path class="dss-gcover" d="M28,110 A82,82 0 0 1 192,110" pathLength="100" stroke-dasharray="100 100" stroke-dashoffset="0"/>'
-                  f'<path class="dss-gseg" d="M28,110 A82,82 0 0 1 192,110" stroke="#3ad17e" pathLength="100" stroke-dasharray="{low_pct:.1f} 100" stroke-dashoffset="0"/>'
-                  f'<path class="dss-gseg" d="M28,110 A82,82 0 0 1 192,110" stroke="#f0b429" pathLength="100" stroke-dasharray="{med_pct:.1f} 100" stroke-dashoffset="{off_med:.1f}"/>'
-                  f'<path class="dss-gseg" d="M28,110 A82,82 0 0 1 192,110" stroke="#f0584f" pathLength="100" stroke-dasharray="{high_pct:.1f} 100" stroke-dashoffset="{off_high:.1f}"/>'
-                  f'<text x="110" y="98" text-anchor="middle" fill="#fff" font-size="32" font-weight="700" font-family="JetBrains Mono, monospace">{avg_score:.1f}</text>'
-                  '<text x="110" y="118" text-anchor="middle" fill="rgba(255,255,255,.5)" font-size="11" font-weight="600">/ 10 điểm TB</text>'
-                '</svg>'
-                '<div style="display:flex;flex-direction:column;gap:10px;width:100%;">'
-                  f'<div class="dss-legend-row"><span class="dss-dot" style="background:#3ad17e;"></span> An toàn<b style="color:#fff;margin-left:auto;">{low_pct:.0f}%</b></div>'
-                  f'<div class="dss-legend-row"><span class="dss-dot" style="background:#f0b429;"></span> Cảnh báo<b style="color:#fff;margin-left:auto;">{med_pct:.0f}%</b></div>'
-                  f'<div class="dss-legend-row"><span class="dss-dot" style="background:#f0584f;"></span> Nguy hiểm<b style="color:#fff;margin-left:auto;">{high_pct:.0f}%</b></div>'
-                '</div>'
-              '</div>'
-            '</div>'
-          '</div>'
+        '<div class="dss-hero-grid">'
+
+        # --- CỘT TRÁI ---
+        '<div class="dss-hero-sub">'
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
+        '<div>'
+        '<p class="dss-hero-eyebrow">Phân phối điểm rủi ro</p>'
+        '<p style="font-size:0.75rem; color:rgba(255,255,255,.55); margin:0 0 10px 0; line-height:1.4; max-width:85%;">'
+        'Số lượng bản ghi theo thang điểm rủi ro (0-10). Di chuột vào cột để xem chi tiết.'
+        '</p>'
+        f'<p class="dss-hero-big">{total_records:,} <span class="dss-hero-unit">bản ghi</span></p>'
+        '</div>'
+        f'<span class="dss-pill" style="background:var(--lime-soft);color:var(--lime);">↗ {delta_str}</span>'
+        '</div>'
+        f'<div class="dss-bars">{bars}</div>'
+        f'<div class="dss-axis" style="justify-content:flex-start; gap:3px;">{axis_labels}</div>'
+        '</div>'
+
+        # --- CỘT PHẢI ---
+        '<div class="dss-hero-sub">'
+        '<div>'
+        '<p class="dss-hero-eyebrow">Tổng quan rủi ro</p>'
+        '<p style="font-size:0.75rem; color:rgba(255,255,255,.55); margin:0 0 8px 0; line-height:1.4;">'
+        'Điểm trung bình và tỷ lệ phân bổ trạng thái bay của toàn hệ thống.'
+        '</p>'
+        '</div>'
+        '<div style="display:flex;align-items:center;gap:12px;margin-top:auto;">'
+        '<svg viewBox="0 0 220 128" width="130" style="overflow:visible;flex-shrink:0;" role="img">'
+        '<path class="dss-gcover" d="M28,110 A82,82 0 0 1 192,110" pathLength="100" stroke-dasharray="100 100" stroke-dashoffset="0"/>'
+        f'<path class="dss-gseg" d="M28,110 A82,82 0 0 1 192,110" stroke="#3ad17e" pathLength="100" stroke-dasharray="{low_pct:.1f} 100" stroke-dashoffset="0"/>'
+        f'<path class="dss-gseg" d="M28,110 A82,82 0 0 1 192,110" stroke="#f0b429" pathLength="100" stroke-dasharray="{med_pct:.1f} 100" stroke-dashoffset="{off_med:.1f}"/>'
+        f'<path class="dss-gseg" d="M28,110 A82,82 0 0 1 192,110" stroke="#f0584f" pathLength="100" stroke-dasharray="{high_pct:.1f} 100" stroke-dashoffset="{off_high:.1f}"/>'
+        f'<text x="110" y="98" text-anchor="middle" fill="#fff" font-size="32" font-weight="700" font-family="JetBrains Mono, monospace">{avg_score:.1f}</text>'
+        '<text x="110" y="118" text-anchor="middle" fill="rgba(255,255,255,.5)" font-size="11" font-weight="600">/ 10 điểm TB</text>'
+        '</svg>'
+        '<div style="display:flex;flex-direction:column;gap:10px;width:100%;">'
+        f'<div class="dss-legend-row"><span class="dss-dot" style="background:#3ad17e;"></span> An toàn<b style="color:#fff;margin-left:auto;">{low_pct:.0f}%</b></div>'
+        f'<div class="dss-legend-row"><span class="dss-dot" style="background:#f0b429;"></span> Cảnh báo<b style="color:#fff;margin-left:auto;">{med_pct:.0f}%</b></div>'
+        f'<div class="dss-legend-row"><span class="dss-dot" style="background:#f0584f;"></span> Nguy hiểm<b style="color:#fff;margin-left:auto;">{high_pct:.0f}%</b></div>'
+        '</div>'
+        '</div>'
+        '</div>'
+
+        '</div>'
         '</div>'
     )
 
-    # Render an toàn 100%, ưu tiên sử dụng st.html nếu bản Streamlit có hỗ trợ
     if hasattr(st, "html"):
         st.html(html_str)
     else:
         st.markdown(html_str, unsafe_allow_html=True)
-
-
 def render_kpi_tiles(tiles: list):
     """
     Bright KPI-tile row (4-up grid). Each tile is a dict:

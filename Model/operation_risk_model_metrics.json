@@ -1,51 +1,88 @@
 {
   "target": "operation_risk",
   "model_name": "operation_risk_model",
+  "relabeling": "probabilistic_v2",
+  "boundary_flip_rate": 0.2,
+  "clear_flip_rate": 0.02,
+  "noise_seed": 42,
   "n_estimators": 100,
   "test_size": 0.2,
   "cv_folds": 5,
   "train_samples": 160000,
   "test_samples": 40000,
-  "accuracy": 0.9994,
-  "cv_mean": 0.9992,
-  "cv_std": 0.0002,
+  "trained_at": "2026-06-25 18:32:41",
   "classes": [
     "High",
     "Low",
     "Medium"
   ],
+  "accuracy": 0.8808,
+  "precision": 0.8818,
+  "recall": 0.8808,
+  "f1": 0.8795,
+  "rmse": 0.5002,
+  "mae": 0.1628,
+  "cv_mean": 0.8835,
+  "cv_std": 0.0023,
   "per_class_f1": {
-    "High": 0.9991,
-    "Low": 0.9996,
-    "Medium": 0.9995
+    "High": 0.833,
+    "Low": 0.8658,
+    "Medium": 0.908
   },
   "per_class_precision": {
-    "High": 0.9985,
-    "Low": 0.9995,
-    "Medium": 0.9998
+    "High": 0.9048,
+    "Low": 0.8768,
+    "Medium": 0.8745
   },
   "per_class_recall": {
-    "High": 0.9996,
-    "Low": 0.9998,
-    "Medium": 0.9992
+    "High": 0.7718,
+    "Low": 0.855,
+    "Medium": 0.9443
   },
   "confusion_matrix": [
     [
-      7497,
-      0,
-      3
+      6807,
+      650,
+      1363
     ],
     [
-      0,
-      11033,
-      2
+      332,
+      9738,
+      1320
     ],
     [
-      11,
-      6,
-      21448
+      384,
+      718,
+      18688
     ]
   ],
-  "train_time_s": 40.08,
-  "trained_at": "2026-06-15 11:48:30"
+  "train_time_s": 36.7,
+  "comparison": {
+    "Decision Tree": {
+      "accuracy": 0.877,
+      "precision": 0.8778,
+      "recall": 0.877,
+      "f1": 0.8756,
+      "rmse": 0.51,
+      "mae": 0.1687,
+      "params": {
+        "max_depth": 10,
+        "min_samples_split": 5,
+        "random_state": 42
+      }
+    },
+    "Logistic Regression": {
+      "accuracy": 0.6871,
+      "precision": 0.6924,
+      "recall": 0.6871,
+      "f1": 0.6819,
+      "rmse": 0.8057,
+      "mae": 0.425,
+      "params": {
+        "solver": "lbfgs",
+        "max_iter": "1000",
+        "random_state": "42"
+      }
+    }
+  }
 }

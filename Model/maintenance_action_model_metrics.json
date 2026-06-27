@@ -1,64 +1,101 @@
 {
   "target": "maintenance_action",
   "model_name": "maintenance_action_model",
+  "relabeling": "probabilistic_v2",
+  "boundary_flip_rate": 0.2,
+  "clear_flip_rate": 0.02,
+  "noise_seed": 42,
   "n_estimators": 100,
   "test_size": 0.2,
   "cv_folds": 5,
   "train_samples": 160000,
   "test_samples": 40000,
-  "accuracy": 0.9991,
-  "cv_mean": 0.9988,
-  "cv_std": 0.0003,
+  "trained_at": "2026-06-25 18:35:53",
   "classes": [
     "Inspection recommended",
     "Maintenance required",
     "Monitor",
     "No maintenance needed"
   ],
+  "accuracy": 0.8839,
+  "precision": 0.8859,
+  "recall": 0.8839,
+  "f1": 0.8823,
+  "rmse": 0.6313,
+  "mae": 0.1963,
+  "cv_mean": 0.882,
+  "cv_std": 0.0014,
   "per_class_f1": {
-    "Inspection recommended": 0.9988,
-    "Maintenance required": 0.9978,
-    "Monitor": 0.9993,
-    "No maintenance needed": 0.9995
+    "Inspection recommended": 0.881,
+    "Maintenance required": 0.7959,
+    "Monitor": 0.9051,
+    "No maintenance needed": 0.8904
   },
   "per_class_precision": {
-    "Inspection recommended": 0.9989,
-    "Maintenance required": 0.9973,
-    "Monitor": 0.9994,
-    "No maintenance needed": 0.9995
+    "Inspection recommended": 0.8735,
+    "Maintenance required": 0.9426,
+    "Monitor": 0.88,
+    "No maintenance needed": 0.8807
   },
   "per_class_recall": {
-    "Inspection recommended": 0.9986,
-    "Maintenance required": 0.9982,
-    "Monitor": 0.9993,
-    "No maintenance needed": 0.9996
+    "Inspection recommended": 0.8886,
+    "Maintenance required": 0.6887,
+    "Monitor": 0.9316,
+    "No maintenance needed": 0.9004
   },
   "confusion_matrix": [
     [
-      10282,
-      9,
-      5,
-      0
+      8986,
+      85,
+      619,
+      423
     ],
     [
-      6,
-      3346,
-      0,
-      0
+      441,
+      3219,
+      596,
+      418
     ],
     [
-      5,
-      0,
-      15306,
-      6
+      447,
+      59,
+      13411,
+      478
     ],
     [
-      0,
-      0,
-      4,
-      11031
+      413,
+      52,
+      613,
+      9740
     ]
   ],
-  "train_time_s": 43.75,
-  "trained_at": "2026-06-15 11:51:55"
+  "train_time_s": 36.59,
+  "comparison": {
+    "Decision Tree": {
+      "accuracy": 0.88,
+      "precision": 0.8816,
+      "recall": 0.88,
+      "f1": 0.8783,
+      "rmse": 0.6403,
+      "mae": 0.2025,
+      "params": {
+        "max_depth": 10,
+        "min_samples_split": 5,
+        "random_state": 42
+      }
+    },
+    "Logistic Regression": {
+      "accuracy": 0.6067,
+      "precision": 0.6302,
+      "recall": 0.6067,
+      "f1": 0.6006,
+      "rmse": 1.0087,
+      "mae": 0.5847,
+      "params": {
+        "solver": "lbfgs",
+        "max_iter": "1000",
+        "random_state": "42"
+      }
+    }
+  }
 }

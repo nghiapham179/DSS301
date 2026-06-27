@@ -3,7 +3,7 @@ app.py — Drone DSS Streamlit Entry Point  |  DSS301 Course
 ============================================================
 Run:  python -m streamlit run app.py
 
-NOTE: folder chứa các trang được đặt tên 'views/' (KHÔNG phải 'pages/')
+NOTE: folder chứa các trang được đặt tên 'app_views/' (KHÔNG phải 'pages/')
       để tránh Streamlit auto-discovery — nếu dùng 'pages/' Streamlit sẽ
       tự thêm chúng vào sidebar mặc định, conflict với custom nav.
 
@@ -11,12 +11,12 @@ Multi-page structure:
   app.py            ← entry point: page_config + sidebar nav + routing
   core.py           ← shared logic (data, models, helpers)
   ui.py             ← reusable UI components
-  views/
-    dashboard.py    ← System Overview
-    parameters.py   ← Điều chỉnh thông số (slider + form tabs)
-    templates.py    ← Phiếu mẫu (8 ready-made scenarios)
-    analysis.py     ← Phân tích theo drone
-    model_info.py   ← Accuracy, F1, confusion matrix, feature importance
+  app_views/
+    dashboard.py      ← System Overview
+    parameters.py     ← Điều chỉnh thông số (slider + form tabs)
+    batch_predict.py  ← Dự đoán hàng loạt (Upload CSV)
+    analysis.py       ← Phân tích theo drone
+    model_info.py     ← Accuracy, F1, confusion matrix, feature importance
 """
 
 import streamlit as st
@@ -32,14 +32,14 @@ st.set_page_config(
 from ui import load_css, render_sidebar_header, render_sidebar_nav
 load_css()
 
-# Import view modules (note: views/, not pages/)
-from app_views import dashboard, parameters, analysis, model_info
+# Import view modules (Đảm bảo tất cả được gọi từ thư mục app_views)
+from app_views import dashboard, parameters, analysis, model_info, batch_predict
 
 
 # ─────────────────────────────────────────────────────────────
 # SIDEBAR — header + nav
 # ─────────────────────────────────────────────────────────────
-
+from app_views import dashboard, parameters, analysis, model_info
 with st.sidebar:
     render_sidebar_header()
 
@@ -52,7 +52,7 @@ with st.sidebar:
 
     page = render_sidebar_nav([
         ("🏠", "Dashboard"),
-        ("🎛️", "Điều chỉnh thông số"),
+        ("🎯", "Dự đoán"),        # Đã đổi tên và icon
         ("📊", "Phân tích drone"),
         ("🤖", "Model Info"),
     ], key="main_nav")
@@ -61,10 +61,9 @@ with st.sidebar:
 # ─────────────────────────────────────────────────────────────
 # ROUTING
 # ─────────────────────────────────────────────────────────────
-
 ROUTES = {
     "Dashboard":            dashboard.render,
-    "Điều chỉnh thông số":  parameters.render,
+    "Dự đoán":              parameters.render,  # Vẫn trỏ về file parameters.py cũ để giữ code slider
     "Phân tích drone":      analysis.render,
     "Model Info":           model_info.render,
 }

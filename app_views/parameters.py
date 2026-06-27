@@ -1,14 +1,15 @@
 """
-views/parameters.py — Điều chỉnh thông số
-============================================
-2 tab:
-  • Tab Slider: mô phỏng nhanh, không lưu
-  • Tab Form:   nhập dữ liệu thực địa + dropdown chọn tình huống mẫu,
-                lưu vào custom_drone_data.csv kết hợp danh sách ID từ gốc.
+app_views/parameters.py — Không gian Dự đoán & Nhập liệu (Prediction Workspace)
+================================================================================
+3 tab:
+  1. Tab Slider: Mô phỏng nhanh qua thanh trượt, không lưu. Hiển thị Radar Chart.
+  2. Tab Form:   Nhập dữ liệu thực địa, chọn tình huống mẫu, lưu vào custom_drone_data.csv.
+  3. Tab Batch:  Tải lên file CSV chứa nhiều bản ghi để dự đoán hàng loạt.
 """
 
 import pandas as pd
 import streamlit as st
+import joblib
 
 from core import (
     build_input_df, predict_drone, flight_decision, battery_status,
@@ -21,12 +22,11 @@ from ui import (
     render_risk_score, render_result_badge, render_banner,
 )
 
+# ─── UTILS CHO TAB 2 & 3 ────────────────────────────────────────────────────
 
 def get_all_drone_ids():
     """Quét và lấy danh sách toàn bộ Drone ID từ cả drone_data_clean.csv và custom_drone_data.csv."""
     ids = set()
-
-    # 1. Quét dữ liệu từ dataset sạch gốc
     try:
         df_base = load_data()
         for col in ["Drone_ID", "drone_id"]:
@@ -35,7 +35,6 @@ def get_all_drone_ids():
     except Exception:
         pass
 
-    # 2. Quét dữ liệu từ lịch sử custom đã lưu trước đó
     if CUSTOM_DATA_PATH.exists() and CUSTOM_DATA_PATH.stat().st_size > 0:
         try:
             df_custom = pd.read_csv(CUSTOM_DATA_PATH)
@@ -43,40 +42,72 @@ def get_all_drone_ids():
                 ids.update(df_custom["drone_id"].dropna().astype(str).tolist())
         except Exception:
             pass
-
     return sorted(list(ids))
 
+@st.cache_resource
+def load_ml_pipeline():
+    """Tải model trực tiếp phục vụ cho Batch Prediction siêu tốc."""
+    try:
+        risk_model = joblib.load("Model/operation_risk_model.joblib")
+        maint_model = joblib.load("Model/maintenance_action_model.joblib")
+        recom_model = joblib.load("Model/recommendation_model.joblib")
+        risk_le = joblib.load("Model/operation_risk_model_label_encoder.joblib")
+        maint_le = joblib.load("Model/maintenance_action_model_label_encoder.joblib")
+        recom_le = joblib.load("Model/recommendation_model_label_encoder.joblib")
+        return (risk_model, risk_le), (maint_model, maint_le), (recom_model, recom_le)
+    except Exception as e:
+        return None, str(e)
+
+def validate_and_format_data(df_raw):
+    """Ép khuôn 10 features chuẩn cho file CSV upload."""
+    EXPECTED_FEATURES = [
+        "battery_level", "flight_time", "signal_strength", "temperature",
+        "wind_speed", "gps_accuracy", "altitude", "speed", "humidity", "pressure"
+    ]
+    df = df_raw.copy()
+    df.columns = df.columns.str.lower().str.strip().str.replace(' ', '_')
+    missing_cols = [col for col in EXPECTED_FEATURES if col not in df.columns]
+    if missing_cols:
+        return None, f"Thiếu các cột bắt buộc: {', '.join(missing_cols)}"
+    df_clean = df[EXPECTED_FEATURES]
+    try:
+        df_clean = df_clean.astype(float)
+    except ValueError:
+        return None, "Dữ liệu chứa ký tự không hợp lệ (không phải số)."
+    return df_clean, "Success"
+
+NONE_OPTION = "— Tự nhập thủ công —"
+
+
+# ─── RENDER GIAO DIỆN CHÍNH ─────────────────────────────────────────────────
 
 def render():
     render_top_nav()
     startup_load_or_stop()
 
     render_page_title(
-        "Điều chỉnh thông số drone",
-        "Mô phỏng hoặc nhập dữ liệu thực địa — hệ thống hỗ trợ ra quyết định vận hành.",
+        "Không gian Dự đoán (Prediction Workspace)",
+        "Hỗ trợ ra quyết định thông qua mô phỏng, nhập liệu thực địa, và phân tích hàng loạt.",
     )
 
-    tab_slider, tab_form = st.tabs([
+    # Khởi tạo 3 tab tính năng
+    tab_slider, tab_form, tab_batch = st.tabs([
         "🎛️  Mô phỏng nhanh (Slider)",
-        "📝  Nhập dữ liệu thực địa (Form)",
+        "📝  Nhập liệu thực địa (Form)",
+        "📂  Dự đoán hàng loạt (CSV)"
     ])
 
-    with tab_slider:
-        _render_slider_tab()
-
-    with tab_form:
-        _render_form_tab()
+    with tab_slider: _render_slider_tab()
+    with tab_form:   _render_form_tab()
+    with tab_batch:  _render_batch_tab()
 
 
 # ─── TAB 1: SLIDER ──────────────────────────────────────────────────────────
 
 def _render_slider_tab():
-    render_banner(
-        "Kéo slider để mô phỏng tình huống — kết quả cập nhật tức thì, không lưu CSV.",
-        "info",
-    )
+    render_banner("Kéo slider để mô phỏng tình huống — kết quả cập nhật tức thì, không lưu lại.", "info")
 
-    render_section_label("Thông số đầu vào  (10 features)")
+    render_section_label("Thông số đầu vào (10 features)")
     sl1, sl2 = st.columns(2, gap="large")
 
     with sl1:
@@ -134,44 +165,25 @@ def _render_slider_tab():
             "Tốc độ":   1 - speed / 100,
             "Nhiệt độ": 1 - abs(temperature - 20) / 65,
         }
-        st.plotly_chart(
-            make_radar_chart(params, safe_threshold=0.6),
-            use_container_width=True,
-            config={"displayModeBar": False},
-        )
+        st.plotly_chart(make_radar_chart(params, safe_threshold=0.6), use_container_width=True, config={"displayModeBar": False})
 
     render_banner(flight_reason, flight_lv)
-
     st.divider()
     render_section_label("Khuyến nghị cuối cùng")
     render_banner(rec_pred, risk_to_level(risk_pred))
 
 
-# ─── TAB 2: FORM (with template dropdown) ───────────────────────────────────
-
-NONE_OPTION = "— Tự nhập thủ công —"
-
+# ─── TAB 2: FORM (LƯU DỮ LIỆU) ──────────────────────────────────────────────
 
 def _render_form_tab():
-    render_banner(
-        "Nhập dữ liệu thực địa chi tiết — kết quả sẽ được **lưu vào** "
-        "`Data/custom_drone_data.csv` để theo dõi lịch sử.",
-        "info",
-    )
+    render_banner("Nhập dữ liệu thực địa chi tiết — kết quả sẽ được **lưu vào** `Data/custom_drone_data.csv`.", "info")
 
-    # ── Dropdown chọn tình huống mẫu (OUTSIDE form so it reruns immediately) ──
     render_section_label("Áp dụng tình huống mẫu (tuỳ chọn)")
-
     template_choice = st.selectbox(
-        "Tình huống mẫu",
-        [NONE_OPTION] + list(TEMPLATE_LOOKUP.keys()),
-        key="template_selector",
-        label_visibility="collapsed",
-        help="Chọn 1 tình huống → các ô bên dưới tự động điền theo phiếu mẫu. "
-             "Bạn vẫn có thể chỉnh tay sau khi áp dụng.",
+        "Tình huống mẫu", [NONE_OPTION] + list(TEMPLATE_LOOKUP.keys()),
+        key="template_selector", label_visibility="collapsed"
     )
 
-    # If template selected, get defaults; otherwise use system defaults
     if template_choice != NONE_OPTION:
         t = TEMPLATE_LOOKUP[template_choice]
         defaults = t["params"]
@@ -182,32 +194,22 @@ def _render_form_tab():
     def _d(key, fallback):
         return float(defaults[key]) if defaults and key in defaults else fallback
 
-    # ── Dropdown chọn Drone ID (OUTSIDE form so it reruns immediately) ──
     render_section_label("Thông tin thiết bị vận hành")
     existing_ids = get_all_drone_ids()
     dropdown_options = ["➕ -- Tạo Drone Mới --"] + existing_ids
 
     selected_drone_opt = st.selectbox(
         "Chọn Drone ID từ Dataset hoặc khởi tạo thực thể mới",
-        options=dropdown_options,
-        key="drone_id_selector",
-        label_visibility="collapsed",
-        help="Hệ thống tự động đồng bộ danh sách ID từ cả drone_data_clean.csv và custom_drone_data.csv"
+        options=dropdown_options, key="drone_id_selector", label_visibility="collapsed"
     )
 
     if selected_drone_opt == "➕ -- Tạo Drone Mới --":
-        drone_id = st.text_input(
-            "Nhập ID Drone mới", value="Drone_Custom_001",
-            help="Mã định danh drone mới, ví dụ: Drone_003, UAV_Beta",
-        )
+        drone_id = st.text_input("Nhập ID Drone mới", value="Drone_Custom_001")
     else:
         drone_id = selected_drone_opt
-        st.info(f"📍 Đang thiết lập thêm bản ghi thông số thực địa mới cho thiết bị: **{drone_id}**")
+        st.info(f"📍 Thiết lập thông số thực địa mới cho thiết bị: **{drone_id}**")
 
-    # ── Form (auto-fills from dropdown selection above) ───────────────────────
     with st.form("drone_manual_form"):
-        st.markdown(f"**Drone Target:** `{drone_id}`")
-
         render_section_label("Thông số cảm biến (10 features)")
         f1, f2 = st.columns(2, gap="large")
         with f1:
@@ -225,47 +227,92 @@ def _render_form_tab():
 
         submitted = st.form_submit_button("Predict & Save", type="primary")
 
-    if not submitted:
-        return
+    if submitted:
+        inp = build_input_df(
+            battery_level=bl, flight_time=ft, signal_strength=ss, temperature=tp,
+            wind_speed=ws, gps_accuracy=ga, altitude=al, speed=sp, humidity=hm, pressure=pr,
+        )
+        risk_pred, maint_pred, rec_pred, conf = predict_drone(inp)
+        flight_st, flight_reason, flight_lv = flight_decision(
+            bl, ss, ws, ga, ft, tp, al, sp, risk_pred, maint_pred,
+        )
+        risk_vn, maint_vn = translate(risk_pred, maint_pred)
+        bat_label, bat_lv = battery_status(bl)
 
-    inp = build_input_df(
-        battery_level=bl, flight_time=ft,
-        signal_strength=ss, temperature=tp,
-        wind_speed=ws, gps_accuracy=ga,
-        altitude=al, speed=sp, humidity=hm, pressure=pr,
-    )
-    risk_pred, maint_pred, rec_pred, conf = predict_drone(inp)
-    flight_st, flight_reason, flight_lv = flight_decision(
-        bl, ss, ws, ga, ft, tp, al, sp, risk_pred, maint_pred,
-    )
-    risk_vn, maint_vn = translate(risk_pred, maint_pred)
-    bat_label, bat_lv = battery_status(bl)
+        saved = save_custom(
+            drone_id, inp, risk_pred, maint_pred, rec_pred,
+            bat_label, flight_st, flight_reason,
+        )
 
-    saved = save_custom(
-        drone_id, inp, risk_pred, maint_pred, rec_pred,
-        bat_label, flight_st, flight_reason,
-    )
+        template_note = f" (tình huống: {template_choice})" if template_choice != NONE_OPTION else ""
+        render_banner(f"✅ Dự đoán hoàn tất — **{drone_id}**{template_note} đã được lưu vào Data/custom_drone_data.csv.", "success")
 
-    template_note = f" (tình huống: {template_choice})" if template_choice != NONE_OPTION else ""
-    render_banner(
-        f"✅ Dự đoán hoàn tất — **{drone_id}**{template_note} đã được lưu vào "
-        f"Data/custom_drone_data.csv.",
-        "success",
-    )
+        render_section_label("Kết quả")
+        r1, r2, r3, r4 = st.columns(4, gap="large")
+        with r1: render_result_badge("Rủi ro vận hành",  risk_vn,   risk_to_level(risk_pred))
+        with r2: render_result_badge("Hành động bảo trì", maint_vn, "info")
+        with r3: render_result_badge("Tình trạng pin",   bat_label, bat_lv)
+        with r4: render_result_badge("Trạng thái bay",   flight_st, flight_lv)
 
-    render_section_label("Kết quả")
-    r1, r2, r3, r4 = st.columns(4, gap="large")
-    with r1: render_result_badge("Rủi ro vận hành",  risk_vn,   risk_to_level(risk_pred))
-    with r2: render_result_badge("Hành động bảo trì", maint_vn, "info")
-    with r3: render_result_badge("Tình trạng pin",   bat_label, bat_lv)
-    with r4: render_result_badge("Trạng thái bay",   flight_st, flight_lv)
+        render_banner(flight_reason, flight_lv)
+        render_banner(rec_pred, risk_to_level(risk_pred))
 
-    render_banner(flight_reason, flight_lv)
-    render_banner(rec_pred, risk_to_level(risk_pred))
+        with st.expander("📄 Xem bản ghi vừa lưu (49 cột chuẩn)"):
+            st.dataframe(saved.tail(1), use_container_width=True)
+            st.caption(f"File: Data/custom_drone_data.csv  ·  Tổng bản ghi hiện tại: {len(saved):,}")
 
-    with st.expander("📄 Xem bản ghi vừa lưu (49 cột chuẩn)"):
-        st.dataframe(saved.tail(1), use_container_width=True)
-        st.caption(
-            f"File: Data/custom_drone_data.csv  ·  "
-            f"Tổng bản ghi hiện tại: {len(saved):,}"
+
+# ─── TAB 3: BATCH PREDICTION (UPLOAD CSV) ───────────────────────────────────
+
+def _render_batch_tab():
+    render_banner("Tải lên file CSV chứa dữ liệu cảm biến thô để tự động phân tích toàn hạm đội.", "info")
+
+    with st.container(border=True):
+        uploaded_file = st.file_uploader("Kéo thả file .CSV dữ liệu Drone vào đây", type=["csv"])
+        st.caption("💡 *File CSV cần chứa đủ 10 cột thông số cảm biến. Tên cột có thể lộn xộn vị trí, hệ thống sẽ tự sắp xếp.*")
+
+    if uploaded_file is not None:
+        st.divider()
+        render_section_label("Tiến trình Xử lý & Dự đoán")
+
+        with st.status("Đang phân tích dữ liệu...", expanded=True) as status:
+            try:
+                df_raw = pd.read_csv(uploaded_file)
+                df_clean, msg = validate_and_format_data(df_raw)
+
+                if df_clean is None:
+                    status.update(label="Thất bại", state="error", expanded=True)
+                    st.error(msg)
+                    return
+
+                pipeline_data = load_ml_pipeline()
+                if pipeline_data[0] is None:
+                    status.update(label="Lỗi Model", state="error", expanded=True)
+                    st.error(f"Lỗi tải Model: {pipeline_data[1]}")
+                    return
+
+                (risk_model, risk_le), (maint_model, maint_le), (recom_model, recom_le) = pipeline_data
+
+                df_raw['PREDICTED_Operation_Risk'] = risk_le.inverse_transform(risk_model.predict(df_clean))
+                df_raw['PREDICTED_Maintenance_Action'] = maint_le.inverse_transform(maint_model.predict(df_clean))
+                df_raw['PREDICTED_Recommendation'] = recom_le.inverse_transform(recom_model.predict(df_clean))
+
+                status.update(label=f"Hoàn tất xử lý {len(df_raw):,} bản ghi!", state="complete", expanded=False)
+
+            except Exception as e:
+                status.update(label="Lỗi không xác định", state="error", expanded=True)
+                st.error(f"Đã xảy ra lỗi: {str(e)}")
+                return
+
+        st.success("✅ Phân tích thành công!")
+        st.dataframe(df_raw.head(10), use_container_width=True)
+
+        csv_data = df_raw.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="⬇️ Tải File Kết Quả Phân Tích (.CSV)",
+            data=csv_data,
+            file_name="drone_batch_predictions.csv",
+            mime="text/csv",
+            type="primary",
+            use_container_width=True
         )
