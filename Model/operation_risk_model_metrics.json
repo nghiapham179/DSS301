@@ -10,7 +10,7 @@
   "cv_folds": 5,
   "train_samples": 160000,
   "test_samples": 40000,
-  "trained_at": "2026-06-25 18:32:41",
+  "trained_at": "2026-06-30 15:14:16",
   "classes": [
     "High",
     "Low",
@@ -56,7 +56,7 @@
       18688
     ]
   ],
-  "train_time_s": 36.7,
+  "train_time_s": 129.43,
   "comparison": {
     "Decision Tree": {
       "accuracy": 0.877,
@@ -76,8 +76,8 @@
       "precision": 0.6924,
       "recall": 0.6871,
       "f1": 0.6819,
-      "rmse": 0.8057,
-      "mae": 0.425,
+      "rmse": 0.8054,
+      "mae": 0.4248,
       "params": {
         "solver": "lbfgs",
         "max_iter": "1000",

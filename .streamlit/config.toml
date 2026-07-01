@@ -1,7 +1,75 @@
+# ═══════════════════════════════════════════════════════════════════
+# .streamlit/config.toml — Drone DSS | DSS301
+# ═══════════════════════════════════════════════════════════════════
+# Đặt file này tại: <project_root>/.streamlit/config.toml
+# Streamlit tự động đọc khi chạy `streamlit run app.py`.
+# ═══════════════════════════════════════════════════════════════════
+
+# ── THEME ──────────────────────────────────────────────────────────
+# Khớp 100% với CSS tokens trong ui.py.
+# Khi Streamlit render widget native, palette tự đồng bộ với custom CSS.
 [theme]
-base="light"
-primaryColor="#6b5dd3"
-backgroundColor="#f4f5f9"
-secondaryBackgroundColor="#ffffff"
-textColor="#11142d"
-font="sans serif"
+base                     = "light"
+primaryColor             = "#4f63d2"   # --accent slate-indigo
+backgroundColor          = "#eef1f8"   # --bg-page
+secondaryBackgroundColor = "#ffffff"   # --bg-card
+textColor                = "#1c1e2e"   # --text-primary
+font                     = "sans serif"
+
+# ── SERVER ─────────────────────────────────────────────────────────
+[server]
+port              = 8501
+
+# "0.0.0.0" cho phép truy cập từ LAN (demo trên máy thầy/cô).
+# Đổi "localhost" nếu chỉ muốn chạy nội bộ.
+address           = "0.0.0.0"
+
+# Bulk Upload và Plotly chart 20K điểm có thể vượt giới hạn mặc định.
+maxUploadSize     = 200      # MB
+maxMessageSize    = 200      # MB
+
+# Tự reload khi edit code — bật trong dev, tắt khi production.
+runOnSave         = true
+
+# Không hiện toolbar Streamlit Cloud (deploy / share / fork).
+headless          = true
+
+# CORS / XSRF — production nên enable cả 2.
+enableCORS              = false
+enableXsrfProtection    = true
+
+# Cache cho static assets — load nhanh khi refresh
+enableStaticServing     = true
+
+# ── BROWSER ────────────────────────────────────────────────────────
+[browser]
+# Tắt telemetry: app load nhanh hơn, data đồ án không gửi ra ngoài.
+gatherUsageStats = false
+
+# ── CLIENT ─────────────────────────────────────────────────────────
+[client]
+# Dev: "full" để debug. Production: "minimal" cho người dùng cuối.
+showErrorDetails        = "full"
+
+# Tắt sidebar nav tự sinh — ta dùng custom render_sidebar_nav() từ ui.py.
+showSidebarNavigation   = false
+
+# Hiện toolbar khi developing, ẩn khi viewer xem
+toolbarMode             = "developer"   # đổi "viewer" khi nộp
+
+# ── RUNNER ─────────────────────────────────────────────────────────
+[runner]
+# Rerun tức thì khi user tương tác — UI mượt hơn
+fastReruns              = true
+
+# Giữ cache_resource sống giữa các lần rerun (model joblib không reload).
+postScriptGC            = true
+
+# Magic commands (auto display var ở dòng cuối) — tắt cho rõ ràng
+magicEnabled            = false
+
+# ── LOGGER ─────────────────────────────────────────────────────────
+[logger]
+# Level: error / warning / info / debug
+level         = "info"
+messageFormat = "%(asctime)s %(levelname)s: %(message)s"
