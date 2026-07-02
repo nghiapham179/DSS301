@@ -10,7 +10,7 @@
   "cv_folds": 5,
   "train_samples": 160000,
   "test_samples": 40000,
-  "trained_at": "2026-06-30 15:14:16",
+  "trained_at": "2026-07-02 20:57:45",
   "classes": [
     "High",
     "Low",
@@ -56,7 +56,7 @@
       18688
     ]
   ],
-  "train_time_s": 129.43,
+  "train_time_s": 68.65,
   "comparison": {
     "Decision Tree": {
       "accuracy": 0.877,

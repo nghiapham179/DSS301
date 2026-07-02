@@ -10,7 +10,7 @@
   "cv_folds": 5,
   "train_samples": 160000,
   "test_samples": 40000,
-  "trained_at": "2026-06-30 15:12:10",
+  "trained_at": "2026-07-02 21:06:30",
   "classes": [
     "Charge immediately before continuing operation",
     "Do not assign next mission; perform maintenance first",
@@ -84,7 +84,7 @@
       3171
     ]
   ],
-  "train_time_s": 86.84,
+  "train_time_s": 106.34,
   "comparison": {
     "Decision Tree": {
       "accuracy": 0.8807,

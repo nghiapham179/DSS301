@@ -10,7 +10,7 @@
   "cv_folds": 5,
   "train_samples": 160000,
   "test_samples": 40000,
-  "trained_at": "2026-06-30 15:18:28",
+  "trained_at": "2026-07-02 21:03:57",
   "classes": [
     "Inspection recommended",
     "Maintenance required",
@@ -69,7 +69,7 @@
       9740
     ]
   ],
-  "train_time_s": 45.36,
+  "train_time_s": 67.97,
   "comparison": {
     "Decision Tree": {
       "accuracy": 0.88,
