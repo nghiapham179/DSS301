@@ -1,16 +1,13 @@
 {
   "target": "recommendation",
   "model_name": "recommendation_model",
-  "relabeling": "probabilistic_v2",
-  "boundary_flip_rate": 0.2,
-  "clear_flip_rate": 0.02,
-  "noise_seed": 42,
+  "evaluation_protocol": "clean_labels_v3",
   "n_estimators": 100,
   "test_size": 0.2,
   "cv_folds": 5,
   "train_samples": 160000,
   "test_samples": 40000,
-  "trained_at": "2026-07-02 21:06:30",
+  "trained_at": "2026-07-10 14:11:28",
   "classes": [
     "Charge immediately before continuing operation",
     "Do not assign next mission; perform maintenance first",
@@ -18,81 +15,185 @@
     "Inspect battery and operating conditions before next mission",
     "Schedule charging soon and monitor next mission"
   ],
-  "accuracy": 0.885,
-  "precision": 0.887,
-  "recall": 0.885,
-  "f1": 0.8805,
-  "rmse": 0.6391,
-  "mae": 0.1969,
-  "cv_mean": 0.884,
-  "cv_std": 0.0012,
+  "accuracy": 0.9993,
+  "precision": 0.9994,
+  "recall": 0.9993,
+  "f1": 0.9994,
+  "rmse": 0.0433,
+  "mae": 0.001,
+  "cv_mean": 0.9992,
+  "cv_std": 0.0001,
+  "cv_fold_scores": [
+    0.9992,
+    0.999,
+    0.9993,
+    0.9991,
+    0.9992
+  ],
+  "group_cv": {
+    "method": "GroupKFold(5) theo drone_id — moi fold test tren 2 drone chua thay khi train",
+    "mean": 0.9993,
+    "std": 0.0002,
+    "fold_scores": [
+      0.9994,
+      0.9992,
+      0.9991,
+      0.9996,
+      0.9992
+    ],
+    "fold_test_drones": [
+      [
+        "Drone_10",
+        "Drone_5"
+      ],
+      [
+        "Drone_6",
+        "Drone_9"
+      ],
+      [
+        "Drone_1",
+        "Drone_8"
+      ],
+      [
+        "Drone_2",
+        "Drone_7"
+      ],
+      [
+        "Drone_3",
+        "Drone_4"
+      ]
+    ],
+    "gap_vs_random": -0.0001
+  },
   "per_class_f1": {
-    "Charge immediately before continuing operation": 0.678,
-    "Do not assign next mission; perform maintenance first": 0.839,
-    "Drone can continue operation under normal monitoring": 0.9248,
-    "Inspect battery and operating conditions before next mission": 0.8917,
-    "Schedule charging soon and monitor next mission": 0.8144
+    "Charge immediately before continuing operation": 0.9994,
+    "Do not assign next mission; perform maintenance first": 0.9984,
+    "Drone can continue operation under normal monitoring": 0.9999,
+    "Inspect battery and operating conditions before next mission": 0.9987,
+    "Schedule charging soon and monitor next mission": 0.999
   },
   "per_class_precision": {
-    "Charge immediately before continuing operation": 0.8808,
-    "Do not assign next mission; perform maintenance first": 0.9562,
-    "Drone can continue operation under normal monitoring": 0.8812,
-    "Inspect battery and operating conditions before next mission": 0.8702,
-    "Schedule charging soon and monitor next mission": 0.8853
+    "Charge immediately before continuing operation": 0.9994,
+    "Do not assign next mission; perform maintenance first": 0.9985,
+    "Drone can continue operation under normal monitoring": 0.9999,
+    "Inspect battery and operating conditions before next mission": 0.9985,
+    "Schedule charging soon and monitor next mission": 0.9992
   },
   "per_class_recall": {
-    "Charge immediately before continuing operation": 0.5511,
-    "Do not assign next mission; perform maintenance first": 0.7473,
-    "Drone can continue operation under normal monitoring": 0.9729,
-    "Inspect battery and operating conditions before next mission": 0.9143,
-    "Schedule charging soon and monitor next mission": 0.7541
+    "Charge immediately before continuing operation": 0.9994,
+    "Do not assign next mission; perform maintenance first": 0.9982,
+    "Drone can continue operation under normal monitoring": 0.9998,
+    "Inspect battery and operating conditions before next mission": 0.9989,
+    "Schedule charging soon and monitor next mission": 0.9989
   },
   "confusion_matrix": [
     [
-      1374,
-      35,
-      639,
-      341,
-      104
+      1605,
+      0,
+      0,
+      1,
+      0
     ],
     [
-      51,
-      3209,
-      615,
-      334,
-      85
+      0,
+      3346,
+      0,
+      6,
+      0
     ],
     [
-      39,
-      28,
-      18676,
-      352,
-      101
+      0,
+      0,
+      21193,
+      4,
+      0
     ],
     [
-      50,
-      55,
-      615,
-      8971,
-      121
+      1,
+      5,
+      2,
+      10285,
+      3
     ],
     [
-      46,
-      29,
-      648,
-      311,
-      3171
+      0,
+      0,
+      0,
+      4,
+      3545
     ]
   ],
-  "train_time_s": 106.34,
+  "train_time_s": 35.82,
+  "per_drone": {
+    "Drone_1": {
+      "drone_name": "DJI Mini 3",
+      "n_test": 4040,
+      "accuracy": 0.9993,
+      "f1": 0.9993
+    },
+    "Drone_10": {
+      "drone_name": "DJI Mini 3",
+      "n_test": 4025,
+      "accuracy": 0.9995,
+      "f1": 0.9995
+    },
+    "Drone_2": {
+      "drone_name": "DJI Air 3",
+      "n_test": 3989,
+      "accuracy": 0.9997,
+      "f1": 0.9997
+    },
+    "Drone_3": {
+      "drone_name": "DJI Mavic 3 Pro",
+      "n_test": 4045,
+      "accuracy": 0.999,
+      "f1": 0.999
+    },
+    "Drone_4": {
+      "drone_name": "DJI Mini 3",
+      "n_test": 4011,
+      "accuracy": 0.9995,
+      "f1": 0.9995
+    },
+    "Drone_5": {
+      "drone_name": "DJI Air 3",
+      "n_test": 3969,
+      "accuracy": 0.9992,
+      "f1": 0.9992
+    },
+    "Drone_6": {
+      "drone_name": "DJI Mavic 3 Pro",
+      "n_test": 4009,
+      "accuracy": 0.9988,
+      "f1": 0.9988
+    },
+    "Drone_7": {
+      "drone_name": "DJI Mini 3",
+      "n_test": 3999,
+      "accuracy": 0.9995,
+      "f1": 0.9995
+    },
+    "Drone_8": {
+      "drone_name": "DJI Air 3",
+      "n_test": 3890,
+      "accuracy": 0.9997,
+      "f1": 0.9997
+    },
+    "Drone_9": {
+      "drone_name": "DJI Mavic 3 Pro",
+      "n_test": 4023,
+      "accuracy": 0.9993,
+      "f1": 0.9993
+    }
+  },
   "comparison": {
     "Decision Tree": {
-      "accuracy": 0.8807,
-      "precision": 0.8814,
-      "recall": 0.8807,
-      "f1": 0.8762,
-      "rmse": 0.6513,
-      "mae": 0.2044,
+      "accuracy": 0.9987,
+      "precision": 0.9987,
+      "recall": 0.9987,
+      "f1": 0.9987,
+      "rmse": 0.0618,
+      "mae": 0.0021,
       "params": {
         "max_depth": 10,
         "min_samples_split": 5,
@@ -100,12 +201,12 @@
       }
     },
     "Logistic Regression": {
-      "accuracy": 0.6662,
-      "precision": 0.6609,
-      "recall": 0.6662,
-      "f1": 0.6264,
-      "rmse": 1.1194,
-      "mae": 0.5763,
+      "accuracy": 0.77,
+      "precision": 0.767,
+      "recall": 0.77,
+      "f1": 0.7636,
+      "rmse": 0.8537,
+      "mae": 0.3675,
       "params": {
         "solver": "lbfgs",
         "max_iter": "1000",

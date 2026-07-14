@@ -165,6 +165,45 @@ def load_feature_importance():
     return pd.read_csv(path)
 
 
+@st.cache_data
+def load_research_json(filename: str):
+    """Load file JSON kết quả nghiên cứu (noise_robustness / cost_sensitive)."""
+    path = MODEL_DIR / filename
+    if not path.exists():
+        return None
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _cost_matrix_for(le) -> "np.ndarray | None":
+    """
+    Trả về ma trận chi phí C(true, pred) khớp thứ tự classes của label
+    encoder, hoặc None nếu chưa có cost_sensitive.json / thứ tự lệch.
+    """
+    cfg = load_research_json("cost_sensitive.json")
+    if not cfg:
+        return None
+    if list(le.classes_) != list(cfg.get("classes", [])):
+        return None
+    return np.array(cfg["cost_matrix"], dtype=float)
+
+
+def cost_sensitive_risk_labels(model, le, X):
+    """
+    Dự đoán operation_risk theo quy tắc Bayes tối thiểu chi phí kỳ vọng
+    (Elkan 2001): j* = argmin_j Σ_i P(i|x)·C(i,j).
+    Fallback về argmax nếu chưa có ma trận chi phí.
+    Trả về (labels, proba) — proba theo thứ tự le.classes_.
+    """
+    proba = model.predict_proba(X)
+    C = _cost_matrix_for(le)
+    if C is None:
+        idx = proba.argmax(axis=1)
+    else:
+        idx = (proba @ C).argmin(axis=1)
+    return le.inverse_transform(idx), proba
+
+
 # ─── INPUT / PREDICTION ─────────────────────────────────────────────────────
 
 def build_input_df(**kw) -> pd.DataFrame:
@@ -173,42 +212,156 @@ def build_input_df(**kw) -> pd.DataFrame:
 
 
 def predict_drone(inp: pd.DataFrame):
-    """Run all 3 classifiers. Returns (risk, maint, rec, confidence%)."""
+    """
+    Run all 3 classifiers. Returns (risk, maint, rec, confidence%).
+
+    operation_risk dùng quy tắc Bayes tối thiểu chi phí kỳ vọng (Elkan
+    2001) thay vì argmax — ưu tiên không bỏ sót High risk. Ma trận chi
+    phí lấy từ Model/cost_sensitive.json (sinh bởi train_model.py).
+    """
     models = load_models()
     X = inp[FEATURES]
     rf_r,  le_r  = models["risk"]
     rf_m,  le_m  = models["maint"]
     rf_rc, le_rc = models["rec"]
 
-    risk  = le_r.inverse_transform(rf_r.predict(X))[0]
+    risk_labels, proba = cost_sensitive_risk_labels(rf_r, le_r, X)
+    risk  = risk_labels[0]
     maint = le_m.inverse_transform(rf_m.predict(X))[0]
     rec   = le_rc.inverse_transform(rf_rc.predict(X))[0]
 
-    conf = 0.0
-    if hasattr(rf_r, "predict_proba"):
-        conf = round(float(rf_r.predict_proba(X).max()) * 100, 1)
+    # Confidence = xác suất của lớp risk ĐÃ CHỌN (không phải max chung)
+    risk_idx = list(le_r.classes_).index(risk)
+    conf = round(float(proba[0, risk_idx]) * 100, 1)
 
     return risk, maint, rec, conf
+
+
+# ─── PER-MODEL OPERATION RULE PROFILES ──────────────────────────────────────
+# Ngưỡng vận hành theo TỪNG DÒNG DRONE, lấy từ thông số kỹ thuật chính hãng
+# DJI (dji.com — trang Specs của từng model). Nguyên tắc suy ra ngưỡng:
+#   • wind_nofly     = sức gió chịu tối đa theo spec (max wind resistance)
+#   • wind_monitor   ≈ 75–80% giới hạn spec (vùng đệm an toàn)
+#   • temp_min/max   = dải nhiệt vận hành theo spec (Operating Temperature)
+#   • battery_rth    = % pin phải quay về trạm — drone càng nhẹ, dự trữ càng
+#                      cao vì gió tiêu hao pin nhanh hơn (nguyên tắc dự phòng
+#                      năng lượng; DJI Fly mặc định cảnh báo low-battery 20%)
+#   • max_flight_time= thời lượng pin tối đa theo spec
+#   • legal_alt      = trần bay 120 m theo điều kiện cấp phép bay phổ biến
+#                      cho UAV dân dụng tại Việt Nam
+#
+# DEFAULT_PROFILE giữ NGUYÊN bộ ngưỡng chung cũ của hệ thống (tương thích
+# ngược — thang đo của dataset synthetic rộng hơn spec thật, vd gió 0–50 m/s).
+
+DRONE_NAME_MAP = {
+    "Drone_1":  "DJI Mini 3",  "Drone_4": "DJI Mini 3",
+    "Drone_7":  "DJI Mini 3",  "Drone_10": "DJI Mini 3",
+    "Drone_2":  "DJI Air 3",   "Drone_5": "DJI Air 3",
+    "Drone_8":  "DJI Air 3",
+    "Drone_3":  "DJI Mavic 3 Pro", "Drone_6": "DJI Mavic 3 Pro",
+    "Drone_9":  "DJI Mavic 3 Pro",
+}
+
+DEFAULT_PROFILE = dict(
+    name="Mặc định (ngưỡng chung)", icon="⚙️", weight_g=None,
+    wind_nofly=35.0,  wind_monitor=25.0,
+    temp_min=-10.0,   temp_max=45.0,
+    temp_monitor_low=-10.0, temp_monitor_high=45.0,   # không có vùng đệm
+    battery_critical=20.0,  battery_rth=40.0,
+    max_flight_time=None,   flight_time_monitor=40.0,
+    max_speed=None,         speed_monitor=75.0,
+    legal_alt=None,         alt_monitor=350.0,
+    gps_nofly=10.0, gps_monitor=7.0,
+    signal_nofly=35.0, signal_monitor=60.0,
+    source="Bộ ngưỡng chung của hệ thống (theo thang dataset synthetic)",
+)
+
+DRONE_PROFILES = {
+    "DJI Mini 3": dict(
+        DEFAULT_PROFILE,
+        name="DJI Mini 3", icon="🛩️", weight_g=248,
+        wind_nofly=10.7,  wind_monitor=8.0,     # Level 5 Beaufort theo spec
+        temp_min=-10.0,   temp_max=40.0,
+        temp_monitor_low=0.0, temp_monitor_high=35.0,
+        battery_critical=15.0, battery_rth=30.0,  # nhẹ nhất → dự trữ cao nhất
+        max_flight_time=38.0,  flight_time_monitor=30.0,
+        max_speed=16.0,        speed_monitor=13.0,   # m/s, S-mode
+        legal_alt=120.0,       alt_monitor=100.0,
+        source="DJI Mini 3 — Specs chính hãng (dji.com)",
+    ),
+    "DJI Air 3": dict(
+        DEFAULT_PROFILE,
+        name="DJI Air 3", icon="✈️", weight_g=720,
+        wind_nofly=12.0,  wind_monitor=9.5,
+        temp_min=-10.0,   temp_max=40.0,
+        temp_monitor_low=0.0, temp_monitor_high=35.0,
+        battery_critical=12.0, battery_rth=25.0,
+        max_flight_time=46.0,  flight_time_monitor=37.0,
+        max_speed=21.0,        speed_monitor=17.0,
+        legal_alt=120.0,       alt_monitor=100.0,
+        source="DJI Air 3 — Specs chính hãng (dji.com)",
+    ),
+    "DJI Mavic 3 Pro": dict(
+        DEFAULT_PROFILE,
+        name="DJI Mavic 3 Pro", icon="🚁", weight_g=958,
+        wind_nofly=12.0,  wind_monitor=9.5,
+        temp_min=-10.0,   temp_max=40.0,
+        temp_monitor_low=0.0, temp_monitor_high=35.0,
+        battery_critical=10.0, battery_rth=20.0,  # pin lớn, chịu gió tốt nhất
+        max_flight_time=43.0,  flight_time_monitor=34.0,
+        max_speed=21.0,        speed_monitor=17.0,
+        legal_alt=120.0,       alt_monitor=100.0,
+        source="DJI Mavic 3 Pro — Specs chính hãng (dji.com)",
+    ),
+}
+
+
+def get_profile(key: str) -> dict:
+    """
+    Lấy hồ sơ quy tắc theo tên dòng drone HOẶC drone_id (Drone_1..10).
+    Không khớp → DEFAULT_PROFILE.
+    """
+    if key in DRONE_PROFILES:
+        return DRONE_PROFILES[key]
+    model = DRONE_NAME_MAP.get(str(key))
+    return DRONE_PROFILES.get(model, DEFAULT_PROFILE)
 
 
 # ─── DECISION RULES (README Section 11) ─────────────────────────────────────
 
 def flight_decision(battery, signal, wind, gps, flight_time,
-                    temp, alt, speed, risk, maint):
-    """Rule-based flight status. Returns (label, reason, level)."""
+                    temp, alt, speed, risk, maint, profile=None):
+    """
+    Rule-based flight status theo hồ sơ quy tắc của từng dòng drone.
+    profile=None → DEFAULT_PROFILE (giữ nguyên hành vi cũ).
+    Returns (label, reason, level).
+    """
+    p  = profile or DEFAULT_PROFILE
     ml = str(maint).lower()
 
-    # Cấm Bay
-    reasons_critical = []
-    if battery < 20:     reasons_critical.append("pin dưới 20%")
-    if signal  < 35:     reasons_critical.append("tín hiệu dưới 35%")
-    if wind    > 35:     reasons_critical.append("gió trên 35 m/s")
-    if gps     > 10:     reasons_critical.append("GPS accuracy trên 10 m")
-    if temp    > 45:     reasons_critical.append("nhiệt độ trên 45°C")
-    if temp    < -10:    reasons_critical.append("nhiệt độ dưới -10°C")
-    if reasons_critical:
+    # Cấm Bay — ràng buộc an toàn cứng theo spec hãng
+    rc = []
+    if battery < p["battery_critical"]:
+        rc.append(f"pin dưới {p['battery_critical']:.0f}% (ngưỡng khẩn của {p['name']})")
+    if signal < p["signal_nofly"]:
+        rc.append(f"tín hiệu dưới {p['signal_nofly']:.0f}%")
+    if wind > p["wind_nofly"]:
+        rc.append(f"gió trên {p['wind_nofly']:.1f} m/s (sức gió chịu tối đa theo spec)")
+    if gps > p["gps_nofly"]:
+        rc.append(f"GPS accuracy trên {p['gps_nofly']:.0f} m")
+    if temp > p["temp_max"]:
+        rc.append(f"nhiệt độ trên {p['temp_max']:.0f}°C (dải vận hành theo spec)")
+    if temp < p["temp_min"]:
+        rc.append(f"nhiệt độ dưới {p['temp_min']:.0f}°C (dải vận hành theo spec)")
+    if p["max_flight_time"] and flight_time > p["max_flight_time"]:
+        rc.append(f"vượt thời lượng pin tối đa {p['max_flight_time']:.0f} phút")
+    if p["max_speed"] and speed > p["max_speed"]:
+        rc.append(f"vượt tốc độ tối đa {p['max_speed']:.0f} m/s theo spec")
+    if p["legal_alt"] and alt > p["legal_alt"]:
+        rc.append(f"vượt trần bay cấp phép {p['legal_alt']:.0f} m")
+    if rc:
         return ("Cấm Bay",
-                "Điều kiện nguy hiểm: " + ", ".join(reasons_critical) + ".",
+                "Điều kiện nguy hiểm: " + ", ".join(rc) + ".",
                 "danger")
 
     if any(kw in ml for kw in ("maintenance required", "inspection recommended",
@@ -217,31 +370,46 @@ def flight_decision(battery, signal, wind, gps, flight_time,
                 "Drone cần kiểm tra hoặc bảo trì trước chuyến bay tiếp theo.",
                 "danger")
 
+    # Quay Về Trạm — pin chạm ngưỡng RTH của dòng máy, hoặc ML báo High
+    if battery < p["battery_rth"]:
+        return ("Quay Về Trạm",
+                f"Pin {battery:.0f}% dưới ngưỡng quay về trạm "
+                f"{p['battery_rth']:.0f}% của {p['name']}.",
+                "warning")
     if risk == "High":
         return ("Quay Về Trạm",
                 "Rủi ro vận hành cao. Drone nên quay về trạm để kiểm tra.",
                 "warning")
 
-    reasons_monitor = []
-    if flight_time > 40: reasons_monitor.append("thời gian bay trên 40 phút")
-    if alt > 350:        reasons_monitor.append("độ cao trên 350 m")
-    if speed > 75:       reasons_monitor.append("tốc độ trên 75")
-    if battery < 40:     reasons_monitor.append("pin dưới 40%")
-    if signal < 60:      reasons_monitor.append("tín hiệu dưới 60%")
-    if wind > 25:        reasons_monitor.append("gió trên 25 m/s")
-    if gps > 7:          reasons_monitor.append("GPS accuracy trên 7 m")
-    if reasons_monitor:
+    rm = []
+    if flight_time > p["flight_time_monitor"]:
+        rm.append(f"thời gian bay trên {p['flight_time_monitor']:.0f} phút")
+    if alt > p["alt_monitor"]:
+        rm.append(f"độ cao trên {p['alt_monitor']:.0f} m")
+    if speed > p["speed_monitor"]:
+        rm.append(f"tốc độ trên {p['speed_monitor']:.0f}")
+    if signal < p["signal_monitor"]:
+        rm.append(f"tín hiệu dưới {p['signal_monitor']:.0f}%")
+    if wind > p["wind_monitor"]:
+        rm.append(f"gió trên {p['wind_monitor']:.1f} m/s")
+    if gps > p["gps_monitor"]:
+        rm.append(f"GPS accuracy trên {p['gps_monitor']:.0f} m")
+    if temp < p["temp_monitor_low"] or temp > p["temp_monitor_high"]:
+        rm.append(f"nhiệt độ ngoài vùng thoải mái "
+                  f"{p['temp_monitor_low']:.0f}–{p['temp_monitor_high']:.0f}°C")
+    if rm:
         return ("Bay Kèm Giám Sát",
-                "Cần theo dõi sát: " + ", ".join(reasons_monitor) + ".",
+                "Cần theo dõi sát: " + ", ".join(rm) + ".",
                 "warning")
 
     return ("Đủ Điều Kiện Bay", "Drone đủ điều kiện vận hành bình thường.", "success")
 
 
-def battery_status(level: float):
-    """(label, alert_level)"""
-    if level > 40: return "Tốt", "success"
-    if level > 20: return "Trung Bình", "warning"
+def battery_status(level: float, profile=None):
+    """(label, alert_level) — ngưỡng theo hồ sơ dòng drone."""
+    p = profile or DEFAULT_PROFILE
+    if level > p["battery_rth"]:      return "Tốt", "success"
+    if level > p["battery_critical"]: return "Trung Bình", "warning"
     return "Yếu", "danger"
 
 
@@ -294,8 +462,13 @@ STANDARD_COLUMNS = [
     "combined_maintenance_priority", "combined_decision_reason"
 ]
 
-def save_custom(drone_id, inp, risk, maint, rec, bat_label, status, reason):
-    """Lưu bản ghi vào custom_drone_data.csv theo đúng 49 cột chuẩn."""
+def save_custom(drone_id, inp, risk, maint, rec, bat_label, status, reason,
+                drone_model=None, extra_cols=None):
+    """
+    Lưu bản ghi vào custom_drone_data.csv theo đúng 49 cột chuẩn.
+    extra_cols: dict cột chuẩn bổ sung (vd lat/long, distance_flown_km,
+    operation_notes...) — dùng cho telemetry Phiên bay trực tiếp.
+    """
     row = inp.copy()
 
     # 1. Ánh xạ các giá trị hiện có vào đúng tên cột chuẩn
@@ -307,6 +480,13 @@ def save_custom(drone_id, inp, risk, maint, rec, bat_label, status, reason):
     row["flight_status"] = status
     row["combined_decision_reason"] = reason  # Đổi tên khớp format
     row["flight_date"] = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
+    if drone_model:
+        row["drone_model"] = drone_model
+        row["manufacturer"] = "DJI" if str(drone_model).startswith("DJI") else pd.NA
+    if extra_cols:
+        for k, v in extra_cols.items():
+            if k in STANDARD_COLUMNS:
+                row[k] = v
 
     # 2. Tự động tính toán thêm các cột có thể suy luận
     row["risk_score"] = risk_score_estimate(

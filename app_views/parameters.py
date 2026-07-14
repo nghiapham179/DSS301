@@ -14,8 +14,9 @@ import joblib
 from core import (
     build_input_df, predict_drone, flight_decision, battery_status,
     translate, risk_score_estimate, risk_to_level, save_custom,
-    make_radar_chart, startup_load_or_stop,
+    make_radar_chart, startup_load_or_stop, cost_sensitive_risk_labels,
     TEMPLATES, TEMPLATE_LOOKUP, load_data, CUSTOM_DATA_PATH,
+    DRONE_PROFILES, DEFAULT_PROFILE, DRONE_NAME_MAP, get_profile,
 )
 from ui import (
     render_top_nav, render_page_title, render_section_label,
@@ -79,6 +80,68 @@ def validate_and_format_data(df_raw):
 NONE_OPTION = "— Tự nhập thủ công —"
 
 
+# ─── HỒ SƠ QUY TẮC THEO DÒNG DRONE ──────────────────────────────────────────
+
+def _profile_selector(key: str):
+    """Selectbox chọn dòng drone → trả về profile quy tắc tương ứng."""
+    options = [DEFAULT_PROFILE["name"]] + list(DRONE_PROFILES.keys())
+    choice = st.selectbox(
+        "Hồ sơ quy tắc vận hành (ngưỡng an toàn theo dòng drone)",
+        options, key=key,
+    )
+    return DRONE_PROFILES.get(choice, DEFAULT_PROFILE)
+
+
+def _render_profile_specs(p: dict):
+    """Bảng ngưỡng của hồ sơ đang chọn — để phi công biết luật đang áp dụng."""
+    with st.expander(f"{p['icon']} Ngưỡng an toàn đang áp dụng — {p['name']}",
+                     expanded=False):
+        rows = [
+            ("💨 Gió — cấm bay / giám sát",
+             f"> {p['wind_nofly']:.1f} m/s  /  > {p['wind_monitor']:.1f} m/s"),
+            ("🌡️ Nhiệt độ — dải vận hành / vùng thoải mái",
+             f"{p['temp_min']:.0f}…{p['temp_max']:.0f}°C  /  "
+             f"{p['temp_monitor_low']:.0f}…{p['temp_monitor_high']:.0f}°C"),
+            ("🔋 Pin — khẩn cấp (cấm bay) / quay về trạm",
+             f"< {p['battery_critical']:.0f}%  /  < {p['battery_rth']:.0f}%"),
+            ("⏱️ Thời lượng bay — tối đa / giám sát",
+             (f"{p['max_flight_time']:.0f} phút" if p["max_flight_time"] else "—")
+             + f"  /  > {p['flight_time_monitor']:.0f} phút"),
+            ("🚀 Tốc độ — tối đa / giám sát",
+             (f"{p['max_speed']:.0f} m/s" if p["max_speed"] else "—")
+             + f"  /  > {p['speed_monitor']:.0f}"),
+            ("🏔️ Độ cao — trần cấp phép / giám sát",
+             (f"{p['legal_alt']:.0f} m" if p["legal_alt"] else "—")
+             + f"  /  > {p['alt_monitor']:.0f} m"),
+            ("📶 Tín hiệu — cấm bay / giám sát",
+             f"< {p['signal_nofly']:.0f}%  /  < {p['signal_monitor']:.0f}%"),
+            ("📍 GPS accuracy — cấm bay / giám sát",
+             f"> {p['gps_nofly']:.0f} m  /  > {p['gps_monitor']:.0f} m"),
+        ]
+        st.table(pd.DataFrame(rows, columns=["Thông số", "Ngưỡng"]))
+        st.caption(f"📚 Nguồn ngưỡng: **{p['source']}**"
+                   + (f" · Khối lượng: {p['weight_g']} g" if p["weight_g"] else "")
+                   + ". Drone càng nhẹ, ngưỡng pin quay về càng cao (dự phòng "
+                     "năng lượng trước gió).")
+
+
+def _rule_override_note(risk_pred: str, flight_lv: str):
+    """
+    Hiển thị khi tầng quy tắc (knowledge-driven) nghiêm khắc hơn ML
+    (data-driven) — minh họa thứ tự ưu tiên trong DSS hybrid: ràng buộc
+    an toàn cứng theo spec hãng luôn ghi đè khuyến nghị từ mô hình.
+    """
+    if flight_lv == "danger" and risk_pred in ("Low", "Medium"):
+        render_banner(
+            "⚖️ **Tầng quy tắc an toàn ghi đè ML:** mô hình ML đánh giá rủi ro "
+            f"**{risk_pred}** (theo thang dữ liệu huấn luyện), nhưng thông số "
+            "vi phạm ngưỡng cứng theo spec của dòng drone đang chọn → hệ thống "
+            "ưu tiên quyết định của tầng quy tắc (kiến trúc DSS hybrid: "
+            "knowledge-driven > data-driven cho ràng buộc an toàn).",
+            "warning",
+        )
+
+
 # ─── RENDER GIAO DIỆN CHÍNH ─────────────────────────────────────────────────
 
 def render():
@@ -107,6 +170,10 @@ def render():
 def _render_slider_tab():
     render_banner("Kéo slider để mô phỏng tình huống — kết quả cập nhật tức thì, không lưu lại.", "info")
 
+    render_section_label("Dòng drone & hồ sơ quy tắc")
+    prof = _profile_selector("slider_profile")
+    _render_profile_specs(prof)
+
     render_section_label("Thông số đầu vào (10 features)")
     sl1, sl2 = st.columns(2, gap="large")
 
@@ -134,9 +201,10 @@ def _render_slider_tab():
     flight_st, flight_reason, flight_lv = flight_decision(
         battery_level, signal_strength, wind_speed, gps_accuracy,
         flight_time, temperature, altitude, speed, risk_pred, maint_pred,
+        profile=prof,
     )
     risk_vn, maint_vn = translate(risk_pred, maint_pred)
-    bat_label, bat_lv = battery_status(battery_level)
+    bat_label, bat_lv = battery_status(battery_level, profile=prof)
     est_score         = risk_score_estimate(battery_level, wind_speed, signal_strength, temperature)
 
     st.divider()
@@ -167,6 +235,7 @@ def _render_slider_tab():
         }
         st.plotly_chart(make_radar_chart(params, safe_threshold=0.6), use_container_width=True, config={"displayModeBar": False})
 
+    _rule_override_note(risk_pred, flight_lv)
     render_banner(flight_reason, flight_lv)
     st.divider()
     render_section_label("Khuyến nghị cuối cùng")
@@ -205,9 +274,19 @@ def _render_form_tab():
 
     if selected_drone_opt == "➕ -- Tạo Drone Mới --":
         drone_id = st.text_input("Nhập ID Drone mới", value="Drone_Custom_001")
+        prof = _profile_selector("form_profile")
     else:
         drone_id = selected_drone_opt
-        st.info(f"📍 Thiết lập thông số thực địa mới cho thiết bị: **{drone_id}**")
+        # Drone trong hạm đội đã biết dòng máy → tự áp hồ sơ quy tắc tương ứng
+        known_model = DRONE_NAME_MAP.get(drone_id)
+        if known_model:
+            prof = get_profile(drone_id)
+            st.info(f"📍 Thiết bị **{drone_id}** thuộc dòng **{known_model}** — "
+                    f"tự động áp dụng hồ sơ quy tắc của dòng máy này.")
+        else:
+            prof = _profile_selector("form_profile")
+            st.info(f"📍 Thiết lập thông số thực địa mới cho thiết bị: **{drone_id}**")
+    _render_profile_specs(prof)
 
     with st.form("drone_manual_form"):
         render_section_label("Thông số cảm biến (10 features)")
@@ -235,13 +314,15 @@ def _render_form_tab():
         risk_pred, maint_pred, rec_pred, conf = predict_drone(inp)
         flight_st, flight_reason, flight_lv = flight_decision(
             bl, ss, ws, ga, ft, tp, al, sp, risk_pred, maint_pred,
+            profile=prof,
         )
         risk_vn, maint_vn = translate(risk_pred, maint_pred)
-        bat_label, bat_lv = battery_status(bl)
+        bat_label, bat_lv = battery_status(bl, profile=prof)
 
         saved = save_custom(
             drone_id, inp, risk_pred, maint_pred, rec_pred,
             bat_label, flight_st, flight_reason,
+            drone_model=prof["name"] if prof is not DEFAULT_PROFILE else None,
         )
 
         template_note = f" (tình huống: {template_choice})" if template_choice != NONE_OPTION else ""
@@ -254,6 +335,7 @@ def _render_form_tab():
         with r3: render_result_badge("Tình trạng pin",   bat_label, bat_lv)
         with r4: render_result_badge("Trạng thái bay",   flight_st, flight_lv)
 
+        _rule_override_note(risk_pred, flight_lv)
         render_banner(flight_reason, flight_lv)
         render_banner(rec_pred, risk_to_level(risk_pred))
 
@@ -293,7 +375,10 @@ def _render_batch_tab():
 
                 (risk_model, risk_le), (maint_model, maint_le), (recom_model, recom_le) = pipeline_data
 
-                df_raw['PREDICTED_Operation_Risk'] = risk_le.inverse_transform(risk_model.predict(df_clean))
+                # operation_risk: quy tắc Bayes tối thiểu chi phí (Elkan 2001)
+                # — đồng bộ với tab Slider/Form (core.predict_drone)
+                risk_labels, _ = cost_sensitive_risk_labels(risk_model, risk_le, df_clean)
+                df_raw['PREDICTED_Operation_Risk'] = risk_labels
                 df_raw['PREDICTED_Maintenance_Action'] = maint_le.inverse_transform(maint_model.predict(df_clean))
                 df_raw['PREDICTED_Recommendation'] = recom_le.inverse_transform(recom_model.predict(df_clean))
 

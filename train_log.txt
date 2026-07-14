@@ -1,0 +1,406 @@
+
+==============================================================
+  DRONE DSS — MODEL TRAINING v3 | DSS301
+==============================================================
+  n_estimators       : 100
+  CV folds           : 5 (random) + 5 (group theo drone)
+  Test size          : 20%
+  class_weight       : balanced
+  n_jobs             : NOT USED (Python 3.14 safe)
+  evaluation         : clean_labels_v3 (khong tiem nhieu vao test)
+  noise study        : ['0%', '5%', '10%', '20%', '30%'] tren operation_risk (train-only)
+  cost-sensitive     : Elkan (2001) Bayes rule tren operation_risk
+  comparison models  : Decision Tree + Logistic Regression
+
+--------------------------------------------------------------
+  Loading & Validating Data
+--------------------------------------------------------------
+  Rows    : 200,000
+  Columns : 50
+  All required columns : OK
+  No missing values : OK
+
+  Feature                      Min    Median       Max
+  ---------------------- --------- --------- ---------
+  battery_level               0.00     50.00    100.00
+  flight_time                 0.00     30.04     60.00
+  signal_strength             0.00     49.93    100.00
+  temperature               -40.00      4.98     50.00
+  wind_speed                  0.00     24.98     50.00
+  gps_accuracy                0.00      5.00     10.00
+  altitude                    0.00    249.56    500.00
+  speed                       0.00     50.12    100.00
+  humidity                    0.00     50.11    100.00
+  pressure                  950.00    999.84   1050.00
+
+  Nhan giu SACH — khong tiem nhieu vao du lieu goc (v3).
+
+==============================================================
+  Training 3 Targets (RF + DT/LR, random CV + group CV)
+==============================================================
+
+--------------------------------------------------------------
+  Target: operation_risk  |  Model: operation_risk_model
+--------------------------------------------------------------
+  Classes (3): ['High', 'Low', 'Medium']
+    High                                                     37,502  ( 18.8%)
+    Low                                                      55,175  ( 27.6%)
+    Medium                                                  107,323  ( 53.7%)
+
+  Train : 160,000  |  Test : 40,000
+
+  [CV-A] Random Stratified 5-fold CV ...
+    Fold 1 : [#########################.]  99.9%  0.9988
+    Fold 2 : [#########################.] 100.0%  0.9996
+    Fold 3 : [#########################.]  99.9%  0.9992
+    Fold 4 : [#########################.]  99.9%  0.9992
+    Fold 5 : [#########################.]  99.9%  0.9992
+  CV done in 257.3s
+  CV mean : 0.9992  std : 0.0002
+
+  [CV-B] GroupKFold 5-fold theo drone_id (test tren drone CHUA THAY) ...
+    Fold 1 (test=Drone_10+Drone_5) : [#########################.]  99.9%  0.9994
+    Fold 2 (test=Drone_6+Drone_9) : [#########################.]  99.9%  0.9994
+    Fold 3 (test=Drone_1+Drone_8) : [#########################.] 100.0%  0.9996
+    Fold 4 (test=Drone_2+Drone_7) : [#########################.]  99.9%  0.9994
+    Fold 5 (test=Drone_3+Drone_4) : [#########################.]  99.9%  0.9992
+  Group CV done in 217.1s
+  Group CV mean : 0.9994  std : 0.0001
+  Leakage gap (random - group) : -0.0002
+  -> Gap nho: model tong quat tot sang drone moi (nhan sinh tu luat chung, khong phu thuoc drone).
+
+  [RF] Training final model ...
+  Done in 38.8s
+
+  [RF] Test accuracy : 0.9994  [#########################.]  99.9%
+       Precision=0.9995  Recall=0.9994  F1=0.9995  RMSE=0.0400  MAE=0.0009
+
+  Classification Report:
+                  precision    recall  f1-score   support
+            High       1.00      1.00      1.00      7500
+             Low       1.00      1.00      1.00     11035
+          Medium       1.00      1.00      1.00     21465
+        accuracy                           1.00     40000
+       macro avg       1.00      1.00      1.00     40000
+    weighted avg       1.00      1.00      1.00     40000
+
+  Confusion Matrix:
+              High     Low  Medium
+  High        7497       0       3
+  Low            0   11033       2
+  Medium        11       6   21448
+
+  Top 5 features:
+    1. battery_level          [######..............]  33.6%  0.3364
+    2. wind_speed             [###.................]  19.5%  0.1955
+    3. flight_time            [###.................]  18.3%  0.1832
+    4. temperature            [##..................]  12.4%  0.1238
+    5. signal_strength        [#...................]   7.4%  0.0741
+
+  [RF] Accuracy tung drone (test set):
+  Drone ID     Model (DJI)          N test  Accuracy       F1
+  ------------ ------------------ -------- --------- --------
+  Drone_1      DJI Mini 3            4,038    0.9995   0.9995
+  Drone_10     DJI Mini 3            4,088    0.9998   0.9998
+  Drone_2      DJI Air 3             4,067    0.9988   0.9988
+  Drone_3      DJI Mavic 3 Pro       4,022    0.9998   0.9998
+  Drone_4      DJI Mini 3            3,890    0.9990   0.9990
+  Drone_5      DJI Air 3             3,990    0.9995   0.9995
+  Drone_6      DJI Mavic 3 Pro       4,001    0.9998   0.9998
+  Drone_7      DJI Mini 3            3,908    0.9990   0.9990
+  Drone_8      DJI Air 3             3,991    0.9997   0.9997
+  Drone_9      DJI Mavic 3 Pro       4,005    0.9998   0.9998
+
+  [DT] Training Decision Tree ...
+  [DT]  acc=0.9991  prec=0.9991  rec=0.9991  f1=0.9991
+
+  [LR] Training Logistic Regression ...
+  [LR]  acc=0.7652  prec=0.7660  rec=0.7652  f1=0.7637
+
+  Saved : operation_risk_model.joblib
+  Saved : operation_risk_model_label_encoder.joblib
+  Saved : operation_risk_model_metrics.json
+
+--------------------------------------------------------------
+  Target: maintenance_action  |  Model: maintenance_action_model
+--------------------------------------------------------------
+  Classes (4): ['Inspection recommended', 'Maintenance required', 'Monitor', 'No maintenance needed']
+    Inspection recommended                                   51,479  ( 25.7%)
+    Maintenance required                                     16,761  (  8.4%)
+    Monitor                                                  76,585  ( 38.3%)
+    No maintenance needed                                    55,175  ( 27.6%)
+
+  Train : 160,000  |  Test : 40,000
+
+  [CV-A] Random Stratified 5-fold CV ...
+    Fold 1 : [#########################.]  99.8%  0.9984
+    Fold 2 : [#########################.]  99.9%  0.9988
+    Fold 3 : [#########################.]  99.9%  0.9992
+    Fold 4 : [#########################.]  99.9%  0.9990
+    Fold 5 : [#########################.]  99.9%  0.9987
+  CV done in 166.7s
+  CV mean : 0.9988  std : 0.0003
+
+  [CV-B] GroupKFold 5-fold theo drone_id (test tren drone CHUA THAY) ...
+    Fold 1 (test=Drone_10+Drone_5) : [#########################.]  99.9%  0.9991
+    Fold 2 (test=Drone_6+Drone_9) : [#########################.]  99.9%  0.9994
+    Fold 3 (test=Drone_1+Drone_8) : [#########################.]  99.9%  0.9991
+    Fold 4 (test=Drone_2+Drone_7) : [#########################.]  99.9%  0.9994
+    Fold 5 (test=Drone_3+Drone_4) : [#########################.]  99.9%  0.9989
+  Group CV done in 217.3s
+  Group CV mean : 0.9992  std : 0.0002
+  Leakage gap (random - group) : -0.0004
+  -> Gap nho: model tong quat tot sang drone moi (nhan sinh tu luat chung, khong phu thuoc drone).
+
+  [RF] Training final model ...
+  Done in 42.6s
+
+  [RF] Test accuracy : 0.9991  [#########################.]  99.9%
+       Precision=0.9991  Recall=0.9991  F1=0.9991  RMSE=0.0403  MAE=0.0011
+
+  Classification Report:
+                            precision    recall  f1-score   support
+    Inspection recommended       1.00      1.00      1.00     10296
+      Maintenance required       1.00      1.00      1.00      3352
+                   Monitor       1.00      1.00      1.00     15317
+     No maintenance needed       1.00      1.00      1.00     11035
+                  accuracy                           1.00     40000
+                 macro avg       1.00      1.00      1.00     40000
+              weighted avg       1.00      1.00      1.00     40000
+
+  Confusion Matrix:
+                            Inspection recommended    Maintenance required                 Monitor   No maintenance needed
+  Inspection recommended                     10282                       9                       5                       0
+  Maintenance required                           6                    3346                       0                       0
+  Monitor                                        5                       0                   15306                       6
+  No maintenance needed                          0                       0                       4                   11031
+
+  Top 5 features:
+    1. battery_level          [#####...............]  28.3%  0.2831
+    2. wind_speed             [###.................]  19.8%  0.1981
+    3. flight_time            [###.................]  19.1%  0.1914
+    4. temperature            [##..................]  14.6%  0.1457
+    5. signal_strength        [#...................]   8.2%  0.0821
+
+  [RF] Accuracy tung drone (test set):
+  Drone ID     Model (DJI)          N test  Accuracy       F1
+  ------------ ------------------ -------- --------- --------
+  Drone_1      DJI Mini 3            4,036    0.9988   0.9988
+  Drone_10     DJI Mini 3            4,093    0.9990   0.9990
+  Drone_2      DJI Air 3             4,066    0.9985   0.9985
+  Drone_3      DJI Mavic 3 Pro       3,880    0.9990   0.9990
+  Drone_4      DJI Mini 3            3,955    0.9987   0.9987
+  Drone_5      DJI Air 3             4,060    1.0000   1.0000
+  Drone_6      DJI Mavic 3 Pro       3,963    0.9995   0.9995
+  Drone_7      DJI Mini 3            3,953    0.9995   0.9995
+  Drone_8      DJI Air 3             4,033    0.9990   0.9990
+  Drone_9      DJI Mavic 3 Pro       3,961    0.9992   0.9992
+
+  [DT] Training Decision Tree ...
+  [DT]  acc=0.9979  prec=0.9979  rec=0.9979  f1=0.9979
+
+  [LR] Training Logistic Regression ...
+  [LR]  acc=0.6781  prec=0.6820  rec=0.6781  f1=0.6790
+
+  Saved : maintenance_action_model.joblib
+  Saved : maintenance_action_model_label_encoder.joblib
+  Saved : maintenance_action_model_metrics.json
+
+--------------------------------------------------------------
+  Target: recommendation  |  Model: recommendation_model
+--------------------------------------------------------------
+  Classes (5): ['Charge immediately before continuing operation', 'Do not assign next mission; perform maintenance first', 'Drone can continue operation under normal monitoring', 'Inspect battery and operating conditions before next mission', 'Schedule charging soon and monitor next mission']
+    Charge immediately before continuing operation            8,031  (  4.0%)
+    Do not assign next mission; perform maintenance first    16,761  (  8.4%)
+    Drone can continue operation under normal monitoring    105,986  ( 53.0%)
+    Inspect battery and operating conditions before next mission  51,479  ( 25.7%)
+    Schedule charging soon and monitor next mission          17,743  (  8.9%)
+
+  Train : 160,000  |  Test : 40,000
+
+  [CV-A] Random Stratified 5-fold CV ...
+    Fold 1 : [#########################.]  99.9%  0.9992
+    Fold 2 : [#########################.]  99.9%  0.9990
+    Fold 3 : [#########################.]  99.9%  0.9993
+    Fold 4 : [#########################.]  99.9%  0.9991
+    Fold 5 : [#########################.]  99.9%  0.9992
+  CV done in 174.2s
+  CV mean : 0.9992  std : 0.0001
+
+  [CV-B] GroupKFold 5-fold theo drone_id (test tren drone CHUA THAY) ...
+    Fold 1 (test=Drone_10+Drone_5) : [#########################.]  99.9%  0.9994
+    Fold 2 (test=Drone_6+Drone_9) : [#########################.]  99.9%  0.9992
+    Fold 3 (test=Drone_1+Drone_8) : [#########################.]  99.9%  0.9991
+    Fold 4 (test=Drone_2+Drone_7) : [#########################.] 100.0%  0.9996
+    Fold 5 (test=Drone_3+Drone_4) : [#########################.]  99.9%  0.9992
+  Group CV done in 184.9s
+  Group CV mean : 0.9993  std : 0.0002
+  Leakage gap (random - group) : -0.0001
+  -> Gap nho: model tong quat tot sang drone moi (nhan sinh tu luat chung, khong phu thuoc drone).
+
+  [RF] Training final model ...
+  Done in 35.8s
+
+  [RF] Test accuracy : 0.9993  [#########################.]  99.9%
+       Precision=0.9994  Recall=0.9993  F1=0.9994  RMSE=0.0433  MAE=0.0010
+
+  Classification Report:
+                                                                  precision    recall  f1-score   support
+                  Charge immediately before continuing operation       1.00      1.00      1.00      1606
+           Do not assign next mission; perform maintenance first       1.00      1.00      1.00      3352
+            Drone can continue operation under normal monitoring       1.00      1.00      1.00     21197
+    Inspect battery and operating conditions before next mission       1.00      1.00      1.00     10296
+                 Schedule charging soon and monitor next mission       1.00      1.00      1.00      3549
+                                                        accuracy                           1.00     40000
+                                                       macro avg       1.00      1.00      1.00     40000
+                                                    weighted avg       1.00      1.00      1.00     40000
+
+  Confusion Matrix:
+                                                                                Charge immediately before continuing operation         Do not assign next mission; perform maintenance first          Drone can continue operation under normal monitoring  Inspect battery and operating conditions before next mission               Schedule charging soon and monitor next mission
+  Charge immediately before continuing operation                                                                          1605                                                             0                                                             0                                                             1                                                             0
+  Do not assign next mission; perform maintenance first                                                                      0                                                          3346                                                             0                                                             6                                                             0
+  Drone can continue operation under normal monitoring                                                                       0                                                             0                                                         21193                                                             4                                                             0
+  Inspect battery and operating conditions before next mission                                                               1                                                             5                                                             2                                                         10285                                                             3
+  Schedule charging soon and monitor next mission                                                                            0                                                             0                                                             0                                                             4                                                          3545
+
+  Top 5 features:
+    1. battery_level          [########............]  44.5%  0.4454
+    2. wind_speed             [###.................]  16.3%  0.1629
+    3. flight_time            [###.................]  16.3%  0.1626
+    4. temperature            [#...................]   9.5%  0.0950
+    5. gps_accuracy           [#...................]   6.1%  0.0605
+
+  [RF] Accuracy tung drone (test set):
+  Drone ID     Model (DJI)          N test  Accuracy       F1
+  ------------ ------------------ -------- --------- --------
+  Drone_1      DJI Mini 3            4,040    0.9993   0.9993
+  Drone_10     DJI Mini 3            4,025    0.9995   0.9995
+  Drone_2      DJI Air 3             3,989    0.9997   0.9997
+  Drone_3      DJI Mavic 3 Pro       4,045    0.9990   0.9990
+  Drone_4      DJI Mini 3            4,011    0.9995   0.9995
+  Drone_5      DJI Air 3             3,969    0.9992   0.9992
+  Drone_6      DJI Mavic 3 Pro       4,009    0.9988   0.9988
+  Drone_7      DJI Mini 3            3,999    0.9995   0.9995
+  Drone_8      DJI Air 3             3,890    0.9997   0.9997
+  Drone_9      DJI Mavic 3 Pro       4,023    0.9993   0.9993
+
+  [DT] Training Decision Tree ...
+  [DT]  acc=0.9987  prec=0.9987  rec=0.9987  f1=0.9987
+
+  [LR] Training Logistic Regression ...
+  [LR]  acc=0.7700  prec=0.7670  rec=0.7700  f1=0.7636
+
+  Saved : recommendation_model.joblib
+  Saved : recommendation_model_label_encoder.joblib
+  Saved : recommendation_model_metrics.json
+
+--------------------------------------------------------------
+  Feature Importance Export
+--------------------------------------------------------------
+
+  Averaged feature importance (3 RF models):
+   1. battery_level          [#######.............]  35.5%  0.3550
+   2. wind_speed             [###.................]  18.6%  0.1855
+   3. flight_time            [###.................]  17.9%  0.1791
+   4. temperature            [##..................]  12.2%  0.1215
+   5. signal_strength        [#...................]   7.2%  0.0716
+   6. gps_accuracy           [#...................]   7.0%  0.0704
+   7. humidity               [....................]   0.4%  0.0043
+   8. speed                  [....................]   0.4%  0.0043
+   9. altitude               [....................]   0.4%  0.0042
+  10. pressure               [....................]   0.4%  0.0042
+  Saved : feature_importance.csv
+
+==============================================================
+  THI NGHIEM [2] — NOISE ROBUSTNESS (operation_risk)
+==============================================================
+  Thiet ke: nhieu nhan phu thuoc dac trung (NNAR) tiem vao
+  TRAIN ONLY o cac muc 0/5/10/20/30%; TEST GIU SACH.
+  Tham chieu: Frenay & Verleysen (2014), IEEE TNNLS.
+
+  Train : 160,000  |  Test (sach) : 40,000
+  Records vung bien (train) : 84,740 (53.0%)
+
+  -- Muc nhieu 0% (bien) / 0.0% (ro) -> flip thuc te 0.0% (0 nhan) --
+    Random Forest          acc=0.9994  f1=0.9995  recall(High)=0.9996  (41.2s)
+    Decision Tree          acc=0.9991  f1=0.9991  recall(High)=0.9980  (1.6s)
+    Logistic Regression    acc=0.7652  f1=0.7637  recall(High)=0.7205  (30.7s)
+
+  -- Muc nhieu 5% (bien) / 0.5% (ro) -> flip thuc te 2.9% (4,668 nhan) --
+    Random Forest          acc=0.9994  f1=0.9994  recall(High)=0.9997  (60.6s)
+    Decision Tree          acc=0.9968  f1=0.9968  recall(High)=0.9937  (1.9s)
+    Logistic Regression    acc=0.7647  f1=0.7630  recall(High)=0.7133  (21.6s)
+
+  -- Muc nhieu 10% (bien) / 1.0% (ro) -> flip thuc te 5.8% (9,268 nhan) --
+    Random Forest          acc=0.9991  f1=0.9991  recall(High)=0.9995  (63.8s)
+    Decision Tree          acc=0.9956  f1=0.9955  recall(High)=0.9920  (1.9s)
+    Logistic Regression    acc=0.7653  f1=0.7632  recall(High)=0.7095  (21.6s)
+
+  -- Muc nhieu 20% (bien) / 2.0% (ro) -> flip thuc te 11.6% (18,483 nhan) --
+    Random Forest          acc=0.9983  f1=0.9984  recall(High)=0.9987  (65.2s)
+    Decision Tree          acc=0.9931  f1=0.9931  recall(High)=0.9871  (2.0s)
+    Logistic Regression    acc=0.7644  f1=0.7619  recall(High)=0.7079  (22.2s)
+
+  -- Muc nhieu 30% (bien) / 3.0% (ro) -> flip thuc te 17.3% (27,724 nhan) --
+    Random Forest          acc=0.9965  f1=0.9965  recall(High)=0.9988  (67.1s)
+    Decision Tree          acc=0.9898  f1=0.9898  recall(High)=0.9831  (1.9s)
+    Logistic Regression    acc=0.7630  f1=0.7602  recall(High)=0.7260  (22.7s)
+
+  Saved : noise_robustness.json
+
+==============================================================
+  THI NGHIEM [3] — COST-SENSITIVE DECISION (operation_risk)
+==============================================================
+  Quy tac Bayes: du bao lop j* = argmin_j sum_i P(i|x)*C(i,j)
+  Tham chieu: Elkan (2001), The foundations of cost-sensitive
+  learning, IJCAI.
+
+  Classes (LE order): ['High', 'Low', 'Medium']
+  Cost matrix C(true -> pred):
+              High     Low  Medium
+  High         0.0    10.0     5.0
+  Low          2.0     0.0     1.0
+  Medium       1.0     2.0     0.0
+
+  Quy tac                       Accuracy  Recall(High)  Mean cost
+  ---------------------------- --------- ------------- ----------
+  Argmax (baseline)               0.9994        0.9996     0.0010
+  Bayes cost-minimizing           0.9933        1.0000     0.0067
+
+  -> Recall(High) thay doi : 0.9996 -> 1.0000 (+0.04 diem %)
+  -> Chi phi ky vong/chuyen bay : 0.0010 -> 0.0067 (+570.0%)
+
+  Saved : cost_sensitive.json
+  -> core.predict_drone se tu dong ap dung quy tac Bayes nay khi file ton tai.
+
+==============================================================
+  Training Complete
+==============================================================
+
+  Target                       RF Acc   RandCV  GroupCV     Gap   DT Acc   LR Acc
+  -------------------------- -------- -------- -------- ------- -------- --------
+  operation_risk               0.9994   0.9992   0.9994 -0.0002   0.9991   0.7652
+  maintenance_action           0.9991   0.9988   0.9992 -0.0004   0.9979   0.6781
+  recommendation               0.9993   0.9992   0.9993 -0.0001   0.9987   0.7700
+
+  Total time : 1843.6s
+
+  Files in Model/:
+    cost_sensitive.json                                    3.4 KB
+    feature_importance.csv                                 0.4 KB
+    maintenance_action_model.joblib                    49845.7 KB
+    maintenance_action_model_label_encoder.joblib          0.5 KB
+    maintenance_action_model_metrics.json                  3.9 KB
+    noise_robustness.json                                  3.4 KB
+    operation_risk_model.joblib                        30440.6 KB
+    operation_risk_model_label_encoder.joblib              0.5 KB
+    operation_risk_model_metrics.json                      3.6 KB
+    recommendation_model.joblib                        41413.1 KB
+    recommendation_model_label_encoder.joblib              0.7 KB
+    recommendation_model_metrics.json                      4.8 KB
+    Risk.joblib                                            0.0 KB
+
+  App: streamlit run app.py
+
+==============================================================
+

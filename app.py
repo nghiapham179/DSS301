@@ -33,7 +33,7 @@ from ui import load_css, render_sidebar_header, render_sidebar_nav
 load_css()
 
 # Import view modules (Đảm bảo tất cả được gọi từ thư mục app_views)
-from app_views import dashboard, parameters, analysis, model_info, batch_predict
+from app_views import dashboard, parameters, analysis, model_info, batch_predict, live_flight
 
 
 # ─────────────────────────────────────────────────────────────
@@ -53,6 +53,7 @@ with st.sidebar:
     page = render_sidebar_nav([
         ("🏠", "Dashboard"),
         ("🎯", "Dự đoán"),        # Đã đổi tên và icon
+        ("🛫", "Phiên bay"),      # Live Flight Session — telemetry 3 phút/tick
         ("📊", "Phân tích drone"),
         ("🤖", "Model Info"),
     ], key="main_nav")
@@ -64,6 +65,7 @@ with st.sidebar:
 ROUTES = {
     "Dashboard":            dashboard.render,
     "Dự đoán":              parameters.render,  # Vẫn trỏ về file parameters.py cũ để giữ code slider
+    "Phiên bay":            live_flight.render,
     "Phân tích drone":      analysis.render,
     "Model Info":           model_info.render,
 }

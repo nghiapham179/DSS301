@@ -20,6 +20,50 @@ from ui import (
 )
 
 
+# ═══════════════════════════════════════════════════════════════════════
+# Chart layout preset — dùng chung cho mọi chart trong page
+# Fix vấn đề hover tooltip đè legend + tooltip position lệch
+# ═══════════════════════════════════════════════════════════════════════
+def _apply_chart_style(fig, unified=True):
+    """
+    Apply consistent styling for hover + legend.
+
+    unified=True → hovermode "x unified": tooltip là 1 box duy nhất bám
+    theo trục X, text LUÔN nằm trong box (fix triệt để bug tách rời).
+    unified=False → dùng cho scatter (mode "closest").
+    """
+    fig.update_layout(
+        hovermode="x unified" if unified else "closest",
+        hoverlabel=dict(
+            bgcolor="white",
+            bordercolor="#d1d5db",
+            font=dict(
+                size=13,
+                family="'Inter', system-ui, sans-serif",
+                color="#1c1e2e",
+            ),
+            align="left",
+            namelength=-1,
+        ),
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=-0.28,
+            xanchor="center",
+            x=0.5,
+            bgcolor="rgba(255,255,255,0)",
+            borderwidth=0,
+            font=dict(size=11, color="#1c1e2e"),
+            title=dict(font=dict(size=11, color="#64697a")),
+        ),
+        margin=dict(t=20, b=100, l=50, r=20),
+    )
+    # Tắt spike line (thanh nét đứt) mà không ghi đè title của axis
+    fig.update_xaxes(showspikes=False)
+    fig.update_yaxes(showspikes=False)
+    return fig
+
+
 def render():
     render_top_nav()
     _, df = startup_load_or_stop()
@@ -33,8 +77,18 @@ def render():
     with st.expander("📖 TỔNG QUAN DỰ ÁN & CƠ SỞ CHỌN LỌC DỮ LIỆU", expanded=False):
         st.warning(
             "💡 **Lưu ý học thuật về Độ chính xác mô hình (Accuracy >99%)**\n\n"
-            "Các mô hình phân loại (Random Forest) trong dự án này đạt độ chính xác rất cao (~99.5%). Nguyên nhân cốt lõi là do tập dữ liệu (dataset) hiện tại được tổng hợp (Synthetic Data) dựa trên các quy tắc vật lý và nghiệp vụ (Rule-based) có tính hệ thống cao, ranh giới phân loại rất rõ ràng và ít dữ liệu nhiễu (noise).\n\n"
-            "→ **Kết luận:** Con số 99% này phản ánh việc mô hình đã **khai phá và biểu diễn lại xuất sắc bộ luật nghiệp vụ (Rules Extraction)**, thay vì là độ chính xác tuyệt đối trên tập dữ liệu vận hành nhiễu loạn ngoài thực tế. Nếu áp dụng vào luồng dữ liệu thật, accuracy kỳ vọng sẽ dao động ở mức 85-92%."
+            "Nhãn của tập dữ liệu này là **synthetic** — được sinh tất định từ chính "
+            "các features bằng bộ luật nghiệp vụ (rule-based). Vì vậy accuracy ~99% trên "
+            "random split là **hệ quả tất yếu**: mô hình đã khai phá lại bộ luật sinh nhãn "
+            "(rules extraction), không phải năng lực dự đoán trên dữ liệu vận hành thật "
+            "(hiện tượng *label leakage* — Kapoor & Narayanan 2023, *Patterns*).\n\n"
+            "→ **Cách xử lý (thay vì hạ accuracy nhân tạo):** giữ nhãn sạch và bổ sung "
+            "3 đánh giá trung thực — xem tab **Model Info → 🧪 Nghiên cứu**:\n"
+            "1. **GroupKFold theo drone_id** — đo khả năng tổng quát sang drone chưa từng thấy (leakage gap);\n"
+            "2. **Noise robustness** — tiêm nhiễu nhãn phụ thuộc đặc trưng vào *tập train duy nhất* "
+            "(0→30%), test giữ sạch, so độ bền RF / DT / LR (Frénay & Verleysen 2014);\n"
+            "3. **Cost-sensitive decision** — quy tắc Bayes tối thiểu chi phí kỳ vọng (Elkan 2001) "
+            "ưu tiên không bỏ sót High-risk, đang được áp dụng thật trong trang Dự đoán."
         )
         st.markdown(
             """
@@ -91,7 +145,7 @@ def render():
          "delta": "Cần ưu tiên xử lý", "delta_color": "var(--c-danger)"},
     ])
 
-    # ── 2. BẢNG DRONE FLEET (read-only, không chọn) ─────────────────────────
+    # ── 2. BẢNG DRONE FLEET ─────────────────────────────────────────────────
     st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
     render_section_label("Quản lý Hạm đội — Trạng thái hiện tại")
 
@@ -132,7 +186,6 @@ def render():
 
     st.caption("💡 *Xem lịch sử bay chi tiết của từng drone tại trang Phân tích Drone.*")
 
-    # Bảng read-only — không có checkbox, không có drill-down
     st.dataframe(
         display_df,
         use_container_width=True,
@@ -150,9 +203,28 @@ def render():
             df, x="risk_score", color="operation_risk", nbins=15,
             color_discrete_map=RISK_COLOR_MAP, barmode="stack", opacity=0.9,
         )
-        fig.update_traces(marker_line_width=0)
-        fig.update_layout(xaxis_title="Điểm rủi ro (0-10)", yaxis_title="Số lượng bản ghi")
-        st.plotly_chart(style_chart(fig, 340), use_container_width=True)
+        fig.update_traces(
+            marker_line_width=0,
+            # unified mode: %{x} hiện ở tiêu đề box, mỗi nhóm 1 dòng
+            hovertemplate="<b>%{fullData.name}:</b> %{y:,} bản ghi<extra></extra>",
+        )
+        fig.update_layout(
+            xaxis=dict(
+                title=dict(
+                    text="Điểm rủi ro (0-10)",
+                    standoff=10,  # khoảng cách title tới trục
+                ),
+            ),
+            yaxis_title="Số lượng bản ghi",
+            bargap=0.08,
+            legend_title_text="Operation Risk",
+        )
+        _apply_chart_style(fig)
+        st.plotly_chart(
+            style_chart(fig, 440),  # tăng chiều cao để có chỗ cho legend
+            use_container_width=True,
+            config={"displayModeBar": False},
+        )
         st.caption(
             "🔍 Histogram phân phối điểm rủi ro (0–10) theo dạng cộng dồn (Stack). "
             "Giúp nhận diện nhanh tỷ trọng các vùng High Risk tập trung ở phân khúc điểm nào."
@@ -168,9 +240,25 @@ def render():
             mc, x="count", y="action", orientation="h",
             color="action", color_discrete_sequence=SEQ, text="count"
         )
-        fig2.update_traces(textposition="outside", marker_line_width=0)
-        fig2.update_layout(showlegend=False, yaxis_title=None, xaxis_title="Số lượng")
-        st.plotly_chart(style_chart(fig2, 340), use_container_width=True)
+        fig2.update_traces(
+            textposition="outside",
+            marker_line_width=0,
+            hovertemplate="<b>%{y}</b><br>%{x:,} bản ghi<extra></extra>",
+        )
+        fig2.update_layout(
+            showlegend=False,
+            yaxis_title=None,
+            xaxis_title="Số lượng",
+        )
+        _apply_chart_style(fig2, unified=False)  # bar ngang: dùng closest
+        fig2.update_layout(hovermode="y unified")  # tooltip bám trục Y
+        # Chart này không có legend nên margin bottom nhỏ hơn
+        fig2.update_layout(margin=dict(t=20, b=30, l=50, r=40))
+        st.plotly_chart(
+            style_chart(fig2, 380),
+            use_container_width=True,
+            config={"displayModeBar": False},
+        )
         st.caption(
             "🔧 Hệ thống tự động phân loại mức độ bảo trì. Tỷ lệ **Maintenance required** "
             "sẽ quyết định tải lượng công việc của đội ngũ kỹ thuật mặt đất trong tuần."
@@ -187,10 +275,31 @@ def render():
             sample, x="battery_level", y="wind_speed",
             color="operation_risk", size="risk_score", opacity=0.6,
             color_discrete_map=RISK_COLOR_MAP,
-            hover_data=["drone_id", "flight_time"]
+            hover_data={
+                "drone_id": True,
+                "flight_time": ":.1f",
+                "battery_level": ":.0f",
+                "wind_speed": ":.1f",
+                "risk_score": ":.1f",
+                "operation_risk": False,
+            },
         )
-        fig3.update_layout(xaxis_title="Dung lượng pin (%)", yaxis_title="Tốc độ gió (m/s)")
-        st.plotly_chart(style_chart(fig3, 360), use_container_width=True)
+        fig3.update_traces(
+            marker=dict(line=dict(width=0)),
+        )
+        fig3.update_layout(
+            xaxis=dict(
+                title=dict(text="Dung lượng pin (%)", standoff=10),
+            ),
+            yaxis_title="Tốc độ gió (m/s)",
+            legend_title_text="Operation Risk",
+        )
+        _apply_chart_style(fig3, unified=False)  # scatter: dùng closest
+        st.plotly_chart(
+            style_chart(fig3, 440),  # tăng cao vì có legend
+            use_container_width=True,
+            config={"displayModeBar": False},
+        )
         st.caption(
             "⚡ **Size của chấm tròn thể hiện mức độ rủi ro**. Vùng góc trái phía trên "
             "(Pin thấp + Gió to) là khu vực cảnh báo đỏ. Hover chuột để xem ID thiết bị."
@@ -207,9 +316,24 @@ def render():
             color_continuous_scale=["#16a34a", "#d97706", "#dc2626"],
             text_auto=".1f"
         )
-        fig4.update_traces(marker_line_width=0, textposition="outside")
-        fig4.update_layout(coloraxis_showscale=False, xaxis_title=None, yaxis_title="Risk Score")
-        st.plotly_chart(style_chart(fig4, 360), use_container_width=True)
+        fig4.update_traces(
+            marker_line_width=0,
+            textposition="outside",
+            hovertemplate="<b>Risk Score TB:</b> %{y:.2f} / 10<extra></extra>",
+        )
+        fig4.update_layout(
+            coloraxis_showscale=False,
+            xaxis_title=None,
+            yaxis_title="Risk Score",
+        )
+        _apply_chart_style(fig4)
+        # Chart này không có legend, chỉ có color axis đã ẩn
+        fig4.update_layout(margin=dict(t=20, b=30, l=50, r=20))
+        st.plotly_chart(
+            style_chart(fig4, 400),
+            use_container_width=True,
+            config={"displayModeBar": False},
+        )
         st.caption(
             "🚁 Danh sách thu gọn tập trung vào nhóm thiết bị có điểm rủi ro vượt ngưỡng. "
             "Đây là danh sách cần được đưa vào kế hoạch kiểm tra kỹ thuật lập tức."

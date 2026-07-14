@@ -1,0 +1,131 @@
+{
+  "target": "operation_risk",
+  "design": "Nhieu NNAR (phu thuoc dac trung, vung bien flip nhieu hon) tiem vao TRAIN ONLY; test set giu nhan sach.",
+  "reference": "Frenay & Verleysen (2014). Classification in the presence of label noise: a survey. IEEE TNNLS 25(5).",
+  "noise_seed": 42,
+  "train_samples": 160000,
+  "test_samples": 40000,
+  "classes": [
+    "High",
+    "Low",
+    "Medium"
+  ],
+  "levels": [
+    {
+      "boundary_flip_rate": 0.0,
+      "clear_flip_rate": 0.0,
+      "effective_train_noise_pct": 0.0,
+      "n_flipped": 0,
+      "results": {
+        "Random Forest": {
+          "accuracy": 0.9994,
+          "f1_weighted": 0.9995,
+          "recall_high": 0.9996
+        },
+        "Decision Tree": {
+          "accuracy": 0.9991,
+          "f1_weighted": 0.9991,
+          "recall_high": 0.998
+        },
+        "Logistic Regression": {
+          "accuracy": 0.7652,
+          "f1_weighted": 0.7637,
+          "recall_high": 0.7205
+        }
+      }
+    },
+    {
+      "boundary_flip_rate": 0.05,
+      "clear_flip_rate": 0.005,
+      "effective_train_noise_pct": 2.92,
+      "n_flipped": 4668,
+      "results": {
+        "Random Forest": {
+          "accuracy": 0.9994,
+          "f1_weighted": 0.9994,
+          "recall_high": 0.9997
+        },
+        "Decision Tree": {
+          "accuracy": 0.9968,
+          "f1_weighted": 0.9968,
+          "recall_high": 0.9937
+        },
+        "Logistic Regression": {
+          "accuracy": 0.7647,
+          "f1_weighted": 0.763,
+          "recall_high": 0.7133
+        }
+      }
+    },
+    {
+      "boundary_flip_rate": 0.1,
+      "clear_flip_rate": 0.01,
+      "effective_train_noise_pct": 5.79,
+      "n_flipped": 9268,
+      "results": {
+        "Random Forest": {
+          "accuracy": 0.9991,
+          "f1_weighted": 0.9991,
+          "recall_high": 0.9995
+        },
+        "Decision Tree": {
+          "accuracy": 0.9956,
+          "f1_weighted": 0.9955,
+          "recall_high": 0.992
+        },
+        "Logistic Regression": {
+          "accuracy": 0.7653,
+          "f1_weighted": 0.7632,
+          "recall_high": 0.7095
+        }
+      }
+    },
+    {
+      "boundary_flip_rate": 0.2,
+      "clear_flip_rate": 0.02,
+      "effective_train_noise_pct": 11.55,
+      "n_flipped": 18483,
+      "results": {
+        "Random Forest": {
+          "accuracy": 0.9983,
+          "f1_weighted": 0.9984,
+          "recall_high": 0.9987
+        },
+        "Decision Tree": {
+          "accuracy": 0.9931,
+          "f1_weighted": 0.9931,
+          "recall_high": 0.9871
+        },
+        "Logistic Regression": {
+          "accuracy": 0.7644,
+          "f1_weighted": 0.7619,
+          "recall_high": 0.7079
+        }
+      }
+    },
+    {
+      "boundary_flip_rate": 0.3,
+      "clear_flip_rate": 0.03,
+      "effective_train_noise_pct": 17.33,
+      "n_flipped": 27724,
+      "results": {
+        "Random Forest": {
+          "accuracy": 0.9965,
+          "f1_weighted": 0.9965,
+          "recall_high": 0.9988
+        },
+        "Decision Tree": {
+          "accuracy": 0.9898,
+          "f1_weighted": 0.9898,
+          "recall_high": 0.9831
+        },
+        "Logistic Regression": {
+          "accuracy": 0.763,
+          "f1_weighted": 0.7602,
+          "recall_high": 0.726
+        }
+      }
+    }
+  ],
+  "trained_at": "2026-07-10 14:18:36"
+}

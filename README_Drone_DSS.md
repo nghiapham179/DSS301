@@ -36,21 +36,47 @@
 | Low | 55,175 | 27.6% |
 | High | 37,502 | 18.8% |
 
-### Mô hình ML
+### Mô hình ML & Thiết kế đánh giá (v3 — Honest Evaluation)
 
-Hệ thống sử dụng **Random Forest Classifier** với các tham số:
+Hệ thống sử dụng **Random Forest Classifier** (so sánh với Decision Tree, Logistic Regression):
 - `n_estimators = 100`
 - `class_weight = "balanced"` — xử lý mất cân bằng nhãn
 - `stratify = y` — đảm bảo tập test có cùng tỷ lệ class
 - Test size: 20% (40,000 bản ghi)
 
-**Kết quả (accuracy trên tập test):**
+> ⚠️ **Lưu ý học thuật:** nhãn của dataset là synthetic, sinh tất định từ features bằng bộ luật
+> nghiệp vụ → accuracy ~99.9% trên random split là hệ quả tất yếu (mô hình "học lại bộ luật"),
+> không phản ánh năng lực trên dữ liệu thật (*label leakage* — Kapoor & Narayanan 2023, *Patterns*).
+> Vì vậy `train_model.py` **không** hạ accuracy bằng cách tiêm nhiễu vào test, mà bổ sung
+> 3 đánh giá nghiên cứu:
 
-| Model | Target | Accuracy |
-|---|---|---|
-| Model 1 | `operation_risk` | ~99.9% |
-| Model 2 | `maintenance_action` | ~99.9% |
-| Model 3 | `recommendation` | ~99.9% |
+| # | Thí nghiệm | Phương pháp | Cơ sở nghiên cứu | Output |
+|---|---|---|---|---|
+| 1 | **Tổng quát hóa sang drone mới** | GroupKFold 5-fold theo `drone_id` (mỗi fold test trên 2 drone chưa thấy) so với Random Stratified CV → **leakage gap** | Kapoor & Narayanan (2023); Roberts et al. (2021, *Nat. Mach. Intell.*) | `*_metrics.json → group_cv` |
+| 2 | **Độ bền nhiễu nhãn** | Nhiễu phụ thuộc đặc trưng (NNAR, vùng biên flip nhiều hơn) tiêm vào **train only** ở mức 0/5/10/20/30%, test giữ **sạch**; so RF/DT/LR | Frénay & Verleysen (2014, *IEEE TNNLS*) | `noise_robustness.json` |
+| 3 | **Quyết định nhạy chi phí** | Ma trận chi phí bất đối xứng (bỏ sót High = 10× báo động nhầm) + quy tắc Bayes *argmin<sub>j</sub> Σ<sub>i</sub> P(i\|x)·C(i,j)* thay argmax — áp dụng thật trong trang Dự đoán | Elkan (2001, *IJCAI*) | `cost_sensitive.json` |
+
+Kết quả chi tiết xem trong app: **Model Info → tab 🧪 Nghiên cứu**.
+
+### Hồ sơ quy tắc vận hành theo dòng drone (Hybrid DSS — tầng tri thức)
+
+Tầng quy tắc (`flight_decision` trong `core.py`) không dùng một bộ ngưỡng chung mà áp
+**ngưỡng riêng theo từng dòng drone**, suy ra từ thông số kỹ thuật chính hãng DJI:
+
+| Ngưỡng | DJI Mini 3 | DJI Air 3 | DJI Mavic 3 Pro | Cơ sở |
+|---|---|---|---|---|
+| Gió tối đa (cấm bay) | 10.7 m/s | 12 m/s | 12 m/s | Max wind resistance — spec DJI |
+| Dải nhiệt vận hành | −10…40°C | −10…40°C | −10…40°C | Operating temperature — spec DJI |
+| Pin quay về trạm (RTH) | 30% | 25% | 20% | Nguyên tắc dự phòng năng lượng: drone càng nhẹ (248g/720g/958g) càng bị gió tiêu hao pin nhanh → dự trữ cao hơn |
+| Pin khẩn cấp (cấm bay) | 15% | 12% | 10% | Nới từ mức cảnh báo low-battery 20%/10% của DJI Fly theo khối lượng |
+| Thời lượng bay tối đa | 38 phút | 46 phút | 43 phút | Max flight time — spec DJI |
+| Tốc độ tối đa | 16 m/s | 21 m/s | 21 m/s | Max speed (S-mode) — spec DJI |
+| Trần bay | 120 m | 120 m | 120 m | Điều kiện cấp phép bay UAV dân dụng phổ biến tại Việt Nam |
+
+Quy tắc phối hợp với ML theo kiến trúc **hybrid DSS** (Power 2002): ràng buộc an toàn cứng
+theo spec hãng **luôn ghi đè** khuyến nghị của mô hình ML; khi xảy ra ghi đè, UI hiển thị rõ
+để người vận hành biết quyết định đến từ tầng nào. Hồ sơ "Mặc định (ngưỡng chung)" giữ bộ
+ngưỡng cũ để tương thích với thang đo của dataset synthetic (vd. gió 0–50 m/s).
 
 ---
 
@@ -67,12 +93,12 @@ DSS301/
 │   └── custom_drone_data.csv     # Dữ liệu người dùng nhập (tự tạo)
 │
 ├── Model/
-│   ├── operation_risk_model.joblib
-│   ├── operation_risk_model_label_encoder.joblib
-│   ├── maintenance_action_model.joblib
-│   ├── maintenance_action_model_label_encoder.joblib
-│   ├── recommendation_model.joblib
-│   └── recommendation_model_label_encoder.joblib
+│   ├── operation_risk_model.joblib          (+ _label_encoder, _metrics.json)
+│   ├── maintenance_action_model.joblib      (+ _label_encoder, _metrics.json)
+│   ├── recommendation_model.joblib          (+ _label_encoder, _metrics.json)
+│   ├── feature_importance.csv
+│   ├── noise_robustness.json     ← thí nghiệm độ bền nhiễu (train-only noise)
+│   └── cost_sensitive.json       ← ma trận chi phí + quy tắc Bayes (Elkan 2001)
 │
 ├── requirements.txt
 └── README.md
@@ -166,7 +192,8 @@ Các file đã được lưu vào thư mục Model/
 
 Thư mục `Model/` sẽ xuất hiện với 6 file `.joblib`.
 
-> ⏱️ Thời gian train: khoảng **3–8 phút** tùy cấu hình máy.
+> ⏱️ Thời gian train: khoảng **30–45 phút** tùy cấu hình máy (bao gồm 2 vòng CV
+> 5-fold × 3 targets + thí nghiệm nhiễu 5 mức; `n_jobs=1` để an toàn với Python 3.14).
 
 ---
 
