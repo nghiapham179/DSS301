@@ -1,107 +1,156 @@
 # 🚁 Drone DSS — Hệ Thống Hỗ Trợ Ra Quyết Định Bảo Hành & Vận Hành Drone
 
-> **Môn học:** DSS301 — Decision Support Systems  
-> **Trường:** FPT University  
-> **Công nghệ:** Python · scikit-learn · Streamlit · Plotly  
+> **Môn học:** DSS301 — Decision Support Systems
+> **Trường:** FPT University
+> **Công nghệ:** Python · scikit-learn · Streamlit · Plotly
 
 ---
 
 ## Mô tả dự án
 
-**Drone DSS** là một hệ thống hỗ trợ ra quyết định (Decision Support System) ứng dụng Machine Learning để phân tích dữ liệu cảm biến UAV (drone) theo thời gian thực, từ đó đưa ra các khuyến nghị về:
+**Drone DSS** là Hệ thống Hỗ trợ Ra quyết định (DSS) kiến trúc **hybrid** cho vận hành và bảo trì
+đội drone, kết hợp 3 tầng ra quyết định:
 
-- **Mức độ rủi ro vận hành** — Low / Medium / High
-- **Hành động bảo trì** — Monitor / Inspection recommended / Maintenance required / No maintenance needed
-- **Khuyến nghị cụ thể** — 5 cấp độ từ "tiếp tục bay" đến "không bay, cần bảo trì ngay"
-- **Trạng thái bay** — Đủ điều kiện bay / Bay kèm giám sát / Quay về trạm / Yêu cầu bảo trì / Cấm bay
+| Tầng | Vai trò | Cơ sở |
+|---|---|---|
+| **1. Data-driven (ML)** | 3 mô hình Random Forest dự đoán `operation_risk` / `maintenance_action` / `recommendation`; riêng risk dùng **quy tắc Bayes tối thiểu chi phí kỳ vọng** thay argmax — ưu tiên không bỏ sót High-risk | Elkan (2001), *IJCAI* |
+| **2. Knowledge-driven (Rule)** | Ngưỡng an toàn cứng **theo từng dòng drone** (DJI Mini 3 / Air 3 / Mavic 3 Pro) từ spec chính hãng; luôn **ghi đè** ML khi vi phạm | Power (2002); spec DJI |
+| **3. Trend (giám sát tuần tự)** | Trang Phiên bay trực tiếp: EWMA control chart trên risk score + dự báo pin tick kế → quyết định **chủ động** trước khi vi phạm | Roberts (1959), *Technometrics* |
 
-### Dữ liệu
+### 5 trang chức năng
+
+1. **🏠 Dashboard** — tổng quan hạm đội: KPI, phân phối rủi ro, bảo trì, top drone rủi ro.
+2. **🎯 Dự đoán** — 3 tab: mô phỏng Slider (kèm chọn hồ sơ dòng drone + radar chart), Form nhập
+   thực địa (tự nhận dòng máy, lưu 49 cột chuẩn), Batch CSV (dự đoán hàng loạt).
+3. **🛫 Phiên bay** — phiên bay trực tiếp: mỗi chu kỳ 3 phút (demo: 10 giây) nhận **1 dòng telemetry
+   đúng format 49 cột** và phân tích tức thời: bay tiếp / giám sát / quay về / hạ cánh ngay.
+4. **📊 Phân tích drone** — drill-down lịch sử từng drone.
+5. **🤖 Model Info** — 4 tab: so sánh RF/DT/LR, chi tiết metrics + confusion matrix, feature
+   importance, và **🧪 Nghiên cứu** (3 thí nghiệm đánh giá nâng cao).
+
+---
+
+## Dữ liệu
 
 | Thông số | Giá trị |
 |---|---|
-| Tổng bản ghi | 200,000 |
-| Số drone | 10 |
-| Số cột | 24 |
+| Tổng bản ghi | 200,000 (synthetic) + dữ liệu người dùng nhập |
+| Số drone | 10 (ánh xạ 3 dòng DJI) |
+| Số cột chuẩn | 49 |
 | Cột đầu vào (features) | 10 cột cảm biến |
 | Cột đầu ra (targets) | 3 model ML + 1 rule engine |
 
 **10 features đầu vào:**
 `battery_level` · `flight_time` · `signal_strength` · `temperature` · `wind_speed` · `gps_accuracy` · `altitude` · `speed` · `humidity` · `pressure`
 
-**Phân phối nhãn:**
+**Phân phối nhãn `operation_risk`:** Medium 53.7% · Low 27.6% · High 18.8%
 
-| operation_risk | Số lượng | Tỷ lệ |
-|---|---|---|
-| Medium | 107,323 | 53.7% |
-| Low | 55,175 | 27.6% |
-| High | 37,502 | 18.8% |
+---
 
-### Mô hình ML & Thiết kế đánh giá (v3 — Honest Evaluation)
+## Mô hình ML & Thiết kế đánh giá (v3 — Honest Evaluation)
 
-Hệ thống sử dụng **Random Forest Classifier** (so sánh với Decision Tree, Logistic Regression):
-- `n_estimators = 100`
-- `class_weight = "balanced"` — xử lý mất cân bằng nhãn
-- `stratify = y` — đảm bảo tập test có cùng tỷ lệ class
-- Test size: 20% (40,000 bản ghi)
+Random Forest (`n_estimators=100`, `class_weight="balanced"`, stratified split 80/20),
+so sánh cùng Decision Tree và Logistic Regression.
 
-> ⚠️ **Lưu ý học thuật:** nhãn của dataset là synthetic, sinh tất định từ features bằng bộ luật
-> nghiệp vụ → accuracy ~99.9% trên random split là hệ quả tất yếu (mô hình "học lại bộ luật"),
-> không phản ánh năng lực trên dữ liệu thật (*label leakage* — Kapoor & Narayanan 2023, *Patterns*).
-> Vì vậy `train_model.py` **không** hạ accuracy bằng cách tiêm nhiễu vào test, mà bổ sung
-> 3 đánh giá nghiên cứu:
+> ⚠️ **Lưu ý học thuật:** nhãn của dataset là synthetic, sinh **tất định từ chính các features**
+> bằng bộ luật nghiệp vụ → accuracy ~99.9% trên random split là hệ quả tất yếu (mô hình "học lại
+> bộ luật" — *label leakage*, Kapoor & Narayanan 2023, *Patterns*), không phản ánh năng lực trên
+> dữ liệu thật. Vì vậy hệ thống **không** hạ accuracy bằng cách tiêm nhiễu vào test (cách làm sai
+> về đo lường), mà giữ nhãn sạch và trả lời 3 câu hỏi nghiên cứu trung thực:
 
-| # | Thí nghiệm | Phương pháp | Cơ sở nghiên cứu | Output |
+### Kết quả huấn luyện (test 40,000 bản ghi)
+
+| Target | RF Acc | Random CV | **GroupKFold theo drone** | Leakage gap | DT | LR |
+|---|---|---|---|---|---|---|
+| operation_risk | 99.94% | 99.92% | 99.94% | −0.02đ% | 99.91% | 76.52% |
+| maintenance_action | 99.91% | 99.88% | 99.92% | −0.04đ% | 99.79% | 67.81% |
+| recommendation | 99.93% | 99.92% | 99.93% | −0.01đ% | 99.87% | 77.00% |
+
+### 3 thí nghiệm nghiên cứu (xem app: Model Info → 🧪 Nghiên cứu)
+
+| # | Thí nghiệm | Phương pháp | Kết quả chính | Cơ sở nghiên cứu |
 |---|---|---|---|---|
-| 1 | **Tổng quát hóa sang drone mới** | GroupKFold 5-fold theo `drone_id` (mỗi fold test trên 2 drone chưa thấy) so với Random Stratified CV → **leakage gap** | Kapoor & Narayanan (2023); Roberts et al. (2021, *Nat. Mach. Intell.*) | `*_metrics.json → group_cv` |
-| 2 | **Độ bền nhiễu nhãn** | Nhiễu phụ thuộc đặc trưng (NNAR, vùng biên flip nhiều hơn) tiêm vào **train only** ở mức 0/5/10/20/30%, test giữ **sạch**; so RF/DT/LR | Frénay & Verleysen (2014, *IEEE TNNLS*) | `noise_robustness.json` |
-| 3 | **Quyết định nhạy chi phí** | Ma trận chi phí bất đối xứng (bỏ sót High = 10× báo động nhầm) + quy tắc Bayes *argmin<sub>j</sub> Σ<sub>i</sub> P(i\|x)·C(i,j)* thay argmax — áp dụng thật trong trang Dự đoán | Elkan (2001, *IJCAI*) | `cost_sensitive.json` |
+| 1 | **Tổng quát hóa sang drone mới** | GroupKFold 5-fold theo `drone_id` (mỗi fold test trên 2 drone chưa thấy) so với Random CV | Leakage gap ≈ 0 → không có overfitting theo thiết bị; đồng thời là bằng chứng định lượng cho hạn chế của nhãn synthetic (sinh từ luật chung, không đặc thù drone) | Kapoor & Narayanan (2023); Roberts et al. (2021, *Nat. Mach. Intell.*) |
+| 2 | **Độ bền nhiễu nhãn** | Nhiễu phụ thuộc đặc trưng (NNAR — vùng biên flip nhiều hơn) tiêm vào **train only** ở mức 0/5/10/20/30%, test giữ **sạch** | Ở 30% nhiễu biên (17.3% nhãn flip): RF −0.29đ% vs DT −0.93đ% → RF bền nhiễu nhất; LR "phẳng" chỉ vì baseline thấp (~76%) | Frénay & Verleysen (2014, *IEEE TNNLS*) |
+| 3 | **Quyết định nhạy chi phí** | Ma trận chi phí bất đối xứng (bỏ sót High = 10× báo động nhầm) + quy tắc Bayes *argmin<sub>j</sub> Σ<sub>i</sub> P(i\|x)·C(i,j)* thay argmax — **áp dụng thật trong trang Dự đoán & Phiên bay** | Recall(High): 99.96% → **100%**; đổi bằng accuracy −0.61đ% (báo động nhầm tăng) — trên nhãn sạch mô hình đã gần hoàn hảo nên lợi ích cost-sensitive chỉ rõ khi có bất định; quy tắc Elkan giả định xác suất đã calibrate → calibration là hướng phát triển tiếp | Elkan (2001, *IJCAI*); Niculescu-Mizil & Caruana (2005, *ICML*) |
 
-Kết quả chi tiết xem trong app: **Model Info → tab 🧪 Nghiên cứu**.
+**Output:** `Model/*_metrics.json` (kèm `group_cv`) · `Model/noise_robustness.json` · `Model/cost_sensitive.json`
 
-### Hồ sơ quy tắc vận hành theo dòng drone (Hybrid DSS — tầng tri thức)
+---
 
-Tầng quy tắc (`flight_decision` trong `core.py`) không dùng một bộ ngưỡng chung mà áp
-**ngưỡng riêng theo từng dòng drone**, suy ra từ thông số kỹ thuật chính hãng DJI:
+## Hồ sơ quy tắc vận hành theo dòng drone (tầng Knowledge-driven)
 
-| Ngưỡng | DJI Mini 3 | DJI Air 3 | DJI Mavic 3 Pro | Cơ sở |
+Tầng quy tắc (`flight_decision` trong `core.py`) áp **ngưỡng riêng theo từng dòng drone**,
+suy từ thông số kỹ thuật chính hãng DJI:
+
+| Ngưỡng | DJI Mini 3 (248g) | DJI Air 3 (720g) | Mavic 3 Pro (958g) | Cơ sở |
 |---|---|---|---|---|
 | Gió tối đa (cấm bay) | 10.7 m/s | 12 m/s | 12 m/s | Max wind resistance — spec DJI |
 | Dải nhiệt vận hành | −10…40°C | −10…40°C | −10…40°C | Operating temperature — spec DJI |
-| Pin quay về trạm (RTH) | 30% | 25% | 20% | Nguyên tắc dự phòng năng lượng: drone càng nhẹ (248g/720g/958g) càng bị gió tiêu hao pin nhanh → dự trữ cao hơn |
-| Pin khẩn cấp (cấm bay) | 15% | 12% | 10% | Nới từ mức cảnh báo low-battery 20%/10% của DJI Fly theo khối lượng |
+| Pin quay về trạm (RTH) | 30% | 25% | 20% | Nguyên tắc dự phòng năng lượng: drone càng nhẹ càng bị gió tiêu hao pin nhanh |
+| Pin khẩn cấp (cấm bay) | 15% | 12% | 10% | Nới từ mức cảnh báo low-battery của DJI Fly theo khối lượng |
 | Thời lượng bay tối đa | 38 phút | 46 phút | 43 phút | Max flight time — spec DJI |
 | Tốc độ tối đa | 16 m/s | 21 m/s | 21 m/s | Max speed (S-mode) — spec DJI |
 | Trần bay | 120 m | 120 m | 120 m | Điều kiện cấp phép bay UAV dân dụng phổ biến tại Việt Nam |
 
-Quy tắc phối hợp với ML theo kiến trúc **hybrid DSS** (Power 2002): ràng buộc an toàn cứng
-theo spec hãng **luôn ghi đè** khuyến nghị của mô hình ML; khi xảy ra ghi đè, UI hiển thị rõ
-để người vận hành biết quyết định đến từ tầng nào. Hồ sơ "Mặc định (ngưỡng chung)" giữ bộ
-ngưỡng cũ để tương thích với thang đo của dataset synthetic (vd. gió 0–50 m/s).
+Khi ML nói Low/Medium nhưng thông số vi phạm ngưỡng cứng của dòng máy, hệ thống ưu tiên tầng quy
+tắc và **hiển thị rõ việc ghi đè** — kiến trúc hybrid DSS (knowledge-driven > data-driven cho ràng
+buộc an toàn; Power 2002). Hồ sơ "Mặc định (ngưỡng chung)" giữ bộ ngưỡng cũ, tương thích thang đo
+dataset synthetic (vd. gió 0–50 m/s).
+
+---
+
+## Phiên bay trực tiếp (tầng Trend — giám sát tuần tự)
+
+Trang **🛫 Phiên bay** mô phỏng luồng telemetry vận hành thật đổ về DSS:
+
+- Bấm **Bắt đầu phiên bay** → mỗi chu kỳ (**3 phút/tick**, chế độ demo **10 giây/tick**) hệ thống
+  nhận 1 dòng dữ liệu **đúng format 49 cột** (simulator suy biến trạng thái: pin hao theo gió/tốc
+  độ, gió AR(1), vị trí GPS di chuyển theo heading) và phân tích ngay bằng pipeline sẵn có.
+- **Verdict mỗi tick:** ✅ Bay tiếp / 👁️ Giám sát / 🔙 Quay về trạm / 🛑 Hạ cánh ngay, với:
+  - **Leo thang:** 2 tick cảnh báo liên tiếp → tự nâng thành Quay về;
+  - **Quay về chủ động (proactive):** dự báo pin tick kế < ngưỡng RTH của dòng máy → khuyến nghị
+    quay về **trước khi** vi phạm;
+  - **EWMA control chart** (λ=0.3) trên risk score phát hiện drift rủi ro tăng dần.
+- UI trực tiếp: biểu đồ pin/gió/EWMA theo tick, **bản đồ đường bay**, nhật ký telemetry, 3 nút
+  **tiêm sự cố** (gió giật / suy hao tín hiệu / sụt pin) để kiểm thử phản ứng hệ thống.
+- Mỗi tick được lưu qua `save_custom` → xuất hiện ngay trong Dashboard & Phân tích drone, kèm bản
+  sao `Data/live_session_log.csv` và nút tải nhật ký phiên.
 
 ---
 
 ## Cấu trúc thư mục
 
 ```
-DSS301/
-├── app.py                        # File chạy chính — Streamlit app
-├── train_model.py                # Script train và lưu model
+DSS_Drone_301/
+├── app.py                        # Entry point — page config + sidebar nav + routing
+├── core.py                       # Logic dùng chung: loaders, predict (cost-sensitive),
+│                                 #   flight_decision (hồ sơ theo dòng drone), save_custom
 ├── ui.py                         # CSS và UI components
+├── train_model.py                # Train v3 + 2 thí nghiệm nghiên cứu (nhiễu, chi phí)
+│
+├── app_views/
+│   ├── dashboard.py              # 🏠 System Overview
+│   ├── parameters.py             # 🎯 Dự đoán (Slider / Form / Batch CSV)
+│   ├── live_flight.py            # 🛫 Phiên bay trực tiếp (telemetry 3 phút/tick)
+│   ├── analysis.py               # 📊 Phân tích theo drone
+│   └── model_info.py             # 🤖 Metrics + tab 🧪 Nghiên cứu
 │
 ├── Data/
-│   ├── drone_data_clean.csv      # Dataset chính (200,000 records)
-│   └── custom_drone_data.csv     # Dữ liệu người dùng nhập (tự tạo)
+│   ├── drone_data_clean.csv      # Dataset chính (200,000 records × 49 cột)
+│   ├── custom_drone_data.csv     # Dữ liệu người dùng nhập + telemetry phiên bay (tự tạo)
+│   └── live_session_log.csv      # Bản sao nhật ký các phiên bay trực tiếp (tự tạo)
 │
-├── Model/
+├── Model/                        # Sinh bởi train_model.py
 │   ├── operation_risk_model.joblib          (+ _label_encoder, _metrics.json)
 │   ├── maintenance_action_model.joblib      (+ _label_encoder, _metrics.json)
 │   ├── recommendation_model.joblib          (+ _label_encoder, _metrics.json)
 │   ├── feature_importance.csv
-│   ├── noise_robustness.json     ← thí nghiệm độ bền nhiễu (train-only noise)
-│   └── cost_sensitive.json       ← ma trận chi phí + quy tắc Bayes (Elkan 2001)
+│   ├── noise_robustness.json     # Thí nghiệm độ bền nhiễu (train-only noise)
+│   └── cost_sensitive.json       # Ma trận chi phí + quy tắc Bayes (Elkan 2001)
 │
-├── requirements.txt
-└── README.md
+├── Requirement.txt
+└── README_Drone_DSS.md
 ```
 
 ---
@@ -110,154 +159,38 @@ DSS301/
 
 ### Yêu cầu hệ thống
 
-- Python **3.9 trở lên** (khuyến nghị 3.11)
-- PyCharm hoặc VS Code
-- RAM tối thiểu 4GB (do dataset 200K records)
+- Python **3.11 trở lên** (đã kiểm chứng trên 3.14 — train script tắt `n_jobs` để an toàn)
+- RAM tối thiểu 4GB (dataset 200K records)
 
-> ⚠️ **Lưu ý Python 3.14:** Nếu dùng Python 3.14, joblib có thể gặp lỗi parallel processing. Khuyến nghị dùng Python 3.11.
-
----
-
-### Bước 1 — Clone hoặc tải repo
-
-**Cách 1 — Git clone:**
-```bash
-git clone https://github.com/nghiapham179/DSS301.git
-cd DSS301
-```
-
-**Cách 2 — Download ZIP:**
-1. Vào `https://github.com/nghiapham179/DSS301`
-2. Click **Code → Download ZIP**
-3. Giải nén vào thư mục bất kỳ
-
----
-
-### Bước 2 — Mở project trong PyCharm
-
-1. Mở PyCharm → **File → Open** → chọn thư mục `DSS301`
-2. PyCharm sẽ tự nhận project
-
----
-
-### Bước 3 — Cài thư viện
-
-Mở **Terminal** trong PyCharm (tab dưới cùng) và chạy:
+### Bước 1 — Cài thư viện
 
 ```bash
 pip install streamlit pandas scikit-learn joblib plotly numpy
 ```
 
-Kiểm tra cài thành công:
-```bash
-python -c "import streamlit, sklearn, joblib, plotly; print('OK')"
-```
+Kiểm tra: `python -c "import streamlit, sklearn, joblib, plotly; print('OK')"`
 
----
+### Bước 2 — Đặt file data
 
-### Bước 4 — Đặt file data đúng chỗ
+Đảm bảo `Data/drone_data_clean.csv` tồn tại (xem cấu trúc thư mục ở trên).
 
-Đảm bảo file `drone_data_clean.csv` nằm trong thư mục `Data/`:
-
-```
-DSS301/
-└── Data/
-    └── drone_data_clean.csv   ← file này phải có
-```
-
-Nếu chưa có thư mục `Data/`, tạo thủ công trong PyCharm:
-- Chuột phải vào project → **New → Directory** → đặt tên `Data`
-- Kéo file CSV vào thư mục `Data/`
-
----
-
-### Bước 5 — Train model
-
-Chạy file `train_model.py` để sinh các file `.joblib`:
+### Bước 3 — Train model
 
 ```bash
 python train_model.py
 ```
 
-Khi chạy xong sẽ thấy:
-```
-DRONE DSS MODEL TRAINING
-Đã đọc data: 200000 dòng, 24 cột
-...
-Accuracy: 0.9991
-...
-HOÀN THÀNH TRAIN MODEL
-Các file đã được lưu vào thư mục Model/
-```
+> ⏱️ Khoảng **30–45 phút**: 3 targets × (5-fold random CV + 5-fold GroupKFold + train final
+> + DT/LR) + thí nghiệm nhiễu 5 mức + phân tích cost-sensitive. Khi xong, `Model/` chứa đầy đủ
+> model + 5 file kết quả nghiên cứu.
 
-Thư mục `Model/` sẽ xuất hiện với 6 file `.joblib`.
-
-> ⏱️ Thời gian train: khoảng **30–45 phút** tùy cấu hình máy (bao gồm 2 vòng CV
-> 5-fold × 3 targets + thí nghiệm nhiễu 5 mức; `n_jobs=1` để an toàn với Python 3.14).
-
----
-
-### Bước 6 — Chạy ứng dụng
-
-Trong Terminal của PyCharm:
+### Bước 4 — Chạy ứng dụng
 
 ```bash
 streamlit run app.py
 ```
 
-Trình duyệt sẽ tự động mở tại:
-```
-http://localhost:8501
-```
-
-Nếu trình duyệt không tự mở, copy URL trên vào trình duyệt thủ công.
-
----
-
-## Hướng dẫn sử dụng
-
-### Trang Dashboard
-
-Tổng quan toàn bộ fleet drone:
-- **Risk Score tổng hợp** — gauge chart hiển thị mức rủi ro trung bình
-- **4 thẻ KPI** — tổng bản ghi, số drone, risk score TB, tỷ lệ High Risk
-- **Phân phối Risk Score** — histogram theo từng mức rủi ro
-- **Maintenance Action** — bar chart các hành động bảo trì cần thực hiện
-- **Battery vs Wind Speed** — scatter plot tương quan pin và gió
-- **Risk Score theo Drone** — so sánh rủi ro giữa các drone
-
-### Trang Dự đoán
-
-Nhập thông số cảm biến thực tế để nhận quyết định ngay:
-
-1. Kéo **10 thanh slider** nhập giá trị cảm biến
-2. Hệ thống **tự động dự đoán** (không cần nhấn nút)
-3. Kết quả hiển thị:
-   - Gauge chart **Risk Score ước tính**
-   - **Mức rủi ro** + độ tin cậy của model
-   - **Hành động bảo trì** cần thực hiện
-   - **Tình trạng pin** (Tốt / Trung Bình / Yếu)
-   - **Trạng thái bay** (5 cấp độ)
-   - **Khuyến nghị** cuối cùng
-
-### Trang Nhập dữ liệu Drone
-
-Nhập số liệu cụ thể (thay vì slider):
-
-1. Điền **Drone ID** (ví dụ: `Drone_Custom_001`)
-2. Nhập 10 thông số vào các ô number input
-3. Nhấn **Dự đoán**
-4. Kết quả được hiển thị và **tự động lưu** vào `Data/custom_drone_data.csv`
-
-### Trang Phân tích Drone
-
-Phân tích chi tiết từng drone:
-
-1. Chọn drone từ dropdown
-2. Xem **4 thẻ KPI** của drone đó
-3. Xem **histogram Risk Score** của drone
-4. Xem **scatter plot** Flight Time vs Battery Level
-5. Xem **donut chart** phân bố Maintenance Action
+Trình duyệt mở tại `http://localhost:8501`.
 
 ---
 
@@ -265,11 +198,12 @@ Phân tích chi tiết từng drone:
 
 | Lỗi | Nguyên nhân | Cách sửa |
 |---|---|---|
-| `No module named 'streamlit'` | Thư viện cài vào Python hệ thống, không vào PyCharm | Vào **Settings → Python Interpreter → Add System Interpreter**, chọn đúng `python.exe` đã cài thư viện |
-| `FileNotFoundError: Data/drone_data_clean.csv` | File CSV chưa có trong thư mục `Data/` | Tạo thư mục `Data/` và copy file CSV vào |
-| `FileNotFoundError: Model/...joblib` | Chưa chạy `train_model.py` | Chạy `python train_model.py` trước |
-| Trình duyệt không tự mở | Streamlit không detect browser | Copy `http://localhost:8501` vào trình duyệt thủ công |
-| Train chạy rất chậm | n_jobs=-1 không hoạt động trên một số máy | Thay `n_jobs=-1` thành `n_jobs=1` trong `train_model.py` |
+| `No module named 'streamlit'` | Thư viện cài vào Python khác với interpreter đang chạy | Kiểm tra **Settings → Python Interpreter** trỏ đúng `python.exe` đã cài thư viện |
+| `FileNotFoundError: Data/drone_data_clean.csv` | Thiếu file dataset | Tạo thư mục `Data/` và copy file CSV vào |
+| `FileNotFoundError: Model/...joblib` | Chưa train | Chạy `python train_model.py` trước |
+| `UnicodeEncodeError` khi train trên Windows | Console cp1252 | Đã xử lý trong code; nếu vẫn gặp: `set PYTHONIOENCODING=utf-8` trước khi chạy |
+| Tab 🧪 Nghiên cứu báo "Chưa có ..." | Model train bằng script cũ (v2) | Chạy lại `python train_model.py` (v3) để sinh `group_cv` + 2 file JSON nghiên cứu |
+| Phiên bay không tự tick | Tab trình duyệt bị ẩn/đóng | Giữ tab mở — `st.fragment(run_every=...)` chỉ chạy khi tab hoạt động |
 
 ---
 
@@ -277,18 +211,31 @@ Phân tích chi tiết từng drone:
 
 | Thư viện | Phiên bản | Mục đích |
 |---|---|---|
-| `streamlit` | ≥ 1.35 | Web UI framework |
-| `scikit-learn` | ≥ 1.3 | Random Forest, LabelEncoder |
+| `streamlit` | ≥ 1.37 (khuyến nghị 1.58) | Web UI + `st.fragment(run_every)` cho phiên bay trực tiếp |
+| `scikit-learn` | ≥ 1.3 | Random Forest, GroupKFold, LabelEncoder, metrics |
 | `pandas` | ≥ 2.0 | Xử lý dữ liệu |
 | `joblib` | ≥ 1.3 | Lưu/load model |
 | `plotly` | ≥ 5.0 | Biểu đồ interactive |
-| `numpy` | ≥ 1.24 | Tính toán số học |
+| `numpy` | ≥ 1.24 | Tính toán số học, simulator AR(1) |
+
+---
+
+## Tài liệu tham khảo
+
+1. Elkan, C. (2001). *The foundations of cost-sensitive learning.* IJCAI.
+2. Frénay, B., & Verleysen, M. (2014). *Classification in the presence of label noise: a survey.* IEEE Transactions on Neural Networks and Learning Systems, 25(5).
+3. Kapoor, S., & Narayanan, A. (2023). *Leakage and the reproducibility crisis in machine-learning-based science.* Patterns, 4(9).
+4. Roberts, S. W. (1959). *Control chart tests based on geometric moving averages.* Technometrics, 1(3). (EWMA)
+5. Roberts, M., et al. (2021). *Common pitfalls and recommendations for using machine learning to detect and prognosticate for COVID-19.* Nature Machine Intelligence, 3.
+6. Niculescu-Mizil, A., & Caruana, R. (2005). *Predicting good probabilities with supervised learning.* ICML.
+7. Power, D. J. (2002). *Decision Support Systems: Concepts and Resources for Managers.* Quorum Books.
+8. DJI. *Mini 3 / Air 3 / Mavic 3 Pro — Specifications.* dji.com.
 
 ---
 
 ## Tác giả
 
-**Nhóm DSS301 — FPT University**  
+**Nhóm DSS301 — FPT University**
 GitHub: [https://github.com/nghiapham179/DSS301](https://github.com/nghiapham179/DSS301)
 
 ---
