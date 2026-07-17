@@ -233,7 +233,7 @@ def _render_slider_tab():
             "Tốc độ":   1 - speed / 100,
             "Nhiệt độ": 1 - abs(temperature - 20) / 65,
         }
-        st.plotly_chart(make_radar_chart(params, safe_threshold=0.6), use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(make_radar_chart(params, safe_threshold=0.6), width="stretch", config={"displayModeBar": False})
 
     _rule_override_note(risk_pred, flight_lv)
     render_banner(flight_reason, flight_lv)
@@ -340,7 +340,7 @@ def _render_form_tab():
         render_banner(rec_pred, risk_to_level(risk_pred))
 
         with st.expander("📄 Xem bản ghi vừa lưu (49 cột chuẩn)"):
-            st.dataframe(saved.tail(1), use_container_width=True)
+            st.dataframe(saved.tail(1), width="stretch")
             st.caption(f"File: Data/custom_drone_data.csv  ·  Tổng bản ghi hiện tại: {len(saved):,}")
 
 
@@ -379,8 +379,9 @@ def _render_batch_tab():
                 # — đồng bộ với tab Slider/Form (core.predict_drone)
                 risk_labels, _ = cost_sensitive_risk_labels(risk_model, risk_le, df_clean)
                 df_raw['PREDICTED_Operation_Risk'] = risk_labels
-                df_raw['PREDICTED_Maintenance_Action'] = maint_le.inverse_transform(maint_model.predict(df_clean))
-                df_raw['PREDICTED_Recommendation'] = recom_le.inverse_transform(recom_model.predict(df_clean))
+                X_batch = df_clean.to_numpy()   # model fit không tên cột — tránh sklearn warning
+                df_raw['PREDICTED_Maintenance_Action'] = maint_le.inverse_transform(maint_model.predict(X_batch))
+                df_raw['PREDICTED_Recommendation'] = recom_le.inverse_transform(recom_model.predict(X_batch))
 
                 status.update(label=f"Hoàn tất xử lý {len(df_raw):,} bản ghi!", state="complete", expanded=False)
 
@@ -390,7 +391,7 @@ def _render_batch_tab():
                 return
 
         st.success("✅ Phân tích thành công!")
-        st.dataframe(df_raw.head(10), use_container_width=True)
+        st.dataframe(df_raw.head(10), width="stretch")
 
         csv_data = df_raw.to_csv(index=False).encode('utf-8')
         st.download_button(
@@ -399,5 +400,5 @@ def _render_batch_tab():
             file_name="drone_batch_predictions.csv",
             mime="text/csv",
             type="primary",
-            use_container_width=True
+            width="stretch"
         )

@@ -254,13 +254,68 @@ def load_css():
         .prog-label { font-size: 0.68rem; color: var(--text-muted); margin: 0; }
 
         /* ── HIDE STREAMLIT CHROME ─────────────────────────────── */
-        header[data-testid="stHeader"]      { display: none !important; }
+        /* KHÔNG dùng display:none cho stHeader / stToolbar: nút mở lại
+           sidebar (stExpandSidebarButton) nằm BÊN TRONG chúng — ẩn cả cụm
+           thì thu gọn sidebar xong sẽ không mở lại được.
+           Header vốn position:absolute (không đẩy layout) và nền trùng màu
+           nền trang nên đã vô hình; chỉ cần tắt pointer-events để nó không
+           chặn click vào nội dung bên dưới. */
+        header[data-testid="stHeader"] { pointer-events: none !important; }
+        [data-testid="stToolbar"]      { pointer-events: none !important; }
+
+        [data-testid="stHeaderActionElements"] { display: none !important; }
         footer                              { visibility: hidden !important; }
-        [data-testid="stToolbar"]           { display: none !important; }
         [data-testid="stDecoration"]        { display: none !important; }
         [data-testid="stStatusWidget"]      { display: none !important; }
         .stDeployButton                     { display: none !important; }
         #MainMenu                           { display: none !important; }
+
+        /* Nút mở lại sidebar — bật lại pointer-events (cha đang tắt) và tạo
+           kiểu khớp ngôn ngữ thiết kế: khối tối bo tròn, gợi đúng hình ảnh
+           thanh sidebar sắp trượt ra. */
+        [data-testid="stExpandSidebarButton"] {
+            pointer-events: auto !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 38px !important;
+            height: 38px !important;
+            margin: 8px 0 0 8px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: var(--sidebar-bg) !important;
+            color: #fff !important;
+            border: 1px solid rgba(255, 255, 255, .10) !important;
+            border-radius: var(--radius-md) !important;
+            box-shadow: 0 4px 14px rgba(27, 30, 48, .28),
+                        0 1px 3px rgba(0, 0, 0, .16) !important;
+            transition: background var(--transition),
+                        transform var(--transition),
+                        box-shadow var(--transition) !important;
+        }
+        [data-testid="stExpandSidebarButton"]:hover {
+            background: var(--accent) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 8px 22px rgba(79, 99, 210, .36),
+                        0 2px 6px rgba(0, 0, 0, .14) !important;
+        }
+        [data-testid="stExpandSidebarButton"]:active {
+            transform: translateY(0) !important;
+            box-shadow: 0 2px 8px rgba(27, 30, 48, .30) !important;
+        }
+        [data-testid="stExpandSidebarButton"]:focus-visible {
+            outline: 2px solid var(--accent) !important;
+            outline-offset: 2px !important;
+        }
+        /* Icon (material font) — nhích nhẹ sang phải khi hover, gợi ý mở ra */
+        [data-testid="stExpandSidebarButton"] span {
+            font-size: 20px !important;
+            line-height: 1 !important;
+            transition: transform var(--transition) !important;
+        }
+        [data-testid="stExpandSidebarButton"]:hover span {
+            transform: translateX(2px) !important;
+        }
 
         [data-testid="stMainBlockContainer"] { padding-top: 1.5rem !important; }
         section[data-testid="stSidebar"] > div:first-child { padding-top: 1.5rem !important; }
@@ -672,7 +727,7 @@ def render_metric_with_chart(label: str, value: str, data_points,
         if len(pts) > 1:
             st.plotly_chart(
                 create_sparkline(pts, color),
-                use_container_width=True,
+                width="stretch",
                 config={"displayModeBar": False},
             )
 
@@ -1141,7 +1196,7 @@ def render_sidebar_nav(items: list, key: str = "main_nav") -> str:
         if st.button(
                 f"{icon}   {label}",
                 key=f"{key}_btn_{i}",
-                use_container_width=True,
+                width="stretch",
                 type=btn_type,
         ):
             st.session_state[key] = label

@@ -122,16 +122,35 @@ def load_models() -> dict:
     }
 
 
+# Cột số theo data dictionary — ép kiểu khi đọc để một ô rác không làm
+# hỏng kiểu của cả cột (dataset gốc có 1 giá trị rác trong wind_direction).
+NUMERIC_COLUMNS = [
+    "latitude", "longitude", "altitude", "speed", "heading", "battery_level",
+    "flight_time", "signal_strength", "temperature", "humidity", "pressure",
+    "wind_speed", "wind_direction", "gps_accuracy", "risk_score", "is_high_risk",
+]
+
+
+def _coerce_numeric(df: pd.DataFrame) -> pd.DataFrame:
+    """Ép các cột số về dạng số; giá trị không hợp lệ → NaN."""
+    for col in NUMERIC_COLUMNS:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+    return df
+
+
 @st.cache_data
 def load_data() -> pd.DataFrame:
     """Load data gốc và tự động gộp với dữ liệu thực địa (custom_drone_data)."""
-    # 1. Đọc data gốc
-    df_base = pd.read_csv(DATA_PATH)
+    # 1. Đọc data gốc — low_memory=False: đọc cả cột 1 lần để suy kiểu nhất
+    #    quán (tránh DtypeWarning do pandas suy kiểu theo từng chunk).
+    df_base = _coerce_numeric(pd.read_csv(DATA_PATH, low_memory=False))
 
     # 2. Đọc data thực địa vừa nhập (nếu có)
     if CUSTOM_DATA_PATH.exists() and CUSTOM_DATA_PATH.stat().st_size > 0:
         try:
-            df_custom = pd.read_csv(CUSTOM_DATA_PATH)
+            df_custom = _coerce_numeric(
+                pd.read_csv(CUSTOM_DATA_PATH, low_memory=False))
 
             # Đồng bộ tên định danh (Khớp cột drone_id của file custom với file gốc)
             if 'drone_id' in df_custom.columns and 'Drone_ID' in df_base.columns:
@@ -139,6 +158,24 @@ def load_data() -> pd.DataFrame:
 
             # Gộp 2 tập dữ liệu lại thành 1
             df_combined = pd.concat([df_base, df_custom], ignore_index=True)
+
+            # Vá dữ liệu custom cũ thiếu cột suy luận (risk_score NaN làm
+            # crash scatter 'size=' trên Dashboard): tính lại từ 4 features
+            # theo đúng công thức risk_score_estimate.
+            if "risk_score" in df_combined.columns:
+                m = df_combined["risk_score"].isna()
+                if m.any():
+                    est = (
+                        (1 - df_combined.loc[m, "battery_level"] / 100) * 4.0
+                        + (df_combined.loc[m, "wind_speed"] / 50) * 3.0
+                        + (1 - df_combined.loc[m, "signal_strength"] / 100) * 2.0
+                        + (df_combined.loc[m, "temperature"].abs() / 50) * 1.0
+                    ).clip(upper=10.0).round(1)
+                    df_combined.loc[m, "risk_score"] = est
+            if "is_high_risk" in df_combined.columns:
+                df_combined["is_high_risk"] = df_combined["is_high_risk"].fillna(
+                    (df_combined.get("operation_risk") == "High").astype(int)
+                )
             return df_combined
         except Exception:
             pass
@@ -195,6 +232,9 @@ def cost_sensitive_risk_labels(model, le, X):
     Fallback về argmax nếu chưa có ma trận chi phí.
     Trả về (labels, proba) — proba theo thứ tự le.classes_.
     """
+    # Model được fit trên numpy array (không có tên cột) — ép về array để
+    # khớp, tránh UserWarning "X has feature names" của sklearn.
+    X = np.asarray(X)
     proba = model.predict_proba(X)
     C = _cost_matrix_for(le)
     if C is None:
@@ -220,7 +260,9 @@ def predict_drone(inp: pd.DataFrame):
     phí lấy từ Model/cost_sensitive.json (sinh bởi train_model.py).
     """
     models = load_models()
-    X = inp[FEATURES]
+    # .to_numpy(): model fit trên array không tên cột — thứ tự cột đã được
+    # FEATURES bảo đảm; tránh UserWarning "X has feature names" của sklearn.
+    X = inp[FEATURES].to_numpy()
     rf_r,  le_r  = models["risk"]
     rf_m,  le_m  = models["maint"]
     rf_rc, le_rc = models["rec"]

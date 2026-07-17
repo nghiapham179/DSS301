@@ -188,7 +188,7 @@ def render():
 
     st.dataframe(
         display_df,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
@@ -222,7 +222,7 @@ def render():
         _apply_chart_style(fig)
         st.plotly_chart(
             style_chart(fig, 440),  # tăng chiều cao để có chỗ cho legend
-            use_container_width=True,
+            width="stretch",
             config={"displayModeBar": False},
         )
         st.caption(
@@ -256,7 +256,7 @@ def render():
         fig2.update_layout(margin=dict(t=20, b=30, l=50, r=40))
         st.plotly_chart(
             style_chart(fig2, 380),
-            use_container_width=True,
+            width="stretch",
             config={"displayModeBar": False},
         )
         st.caption(
@@ -271,6 +271,8 @@ def render():
     with ch3:
         render_section_label("Tương quan: Pin vs Tốc độ gió")
         sample = df.sample(min(2000, len(df)), random_state=42)
+        # size= không chấp nhận NaN — loại phòng thủ các dòng thiếu risk_score
+        sample = sample.dropna(subset=["risk_score", "battery_level", "wind_speed"])
         fig3 = px.scatter(
             sample, x="battery_level", y="wind_speed",
             color="operation_risk", size="risk_score", opacity=0.6,
@@ -297,7 +299,7 @@ def render():
         _apply_chart_style(fig3, unified=False)  # scatter: dùng closest
         st.plotly_chart(
             style_chart(fig3, 440),  # tăng cao vì có legend
-            use_container_width=True,
+            width="stretch",
             config={"displayModeBar": False},
         )
         st.caption(
@@ -331,7 +333,7 @@ def render():
         fig4.update_layout(margin=dict(t=20, b=30, l=50, r=20))
         st.plotly_chart(
             style_chart(fig4, 400),
-            use_container_width=True,
+            width="stretch",
             config={"displayModeBar": False},
         )
         st.caption(

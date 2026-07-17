@@ -22,8 +22,10 @@
 1. **🏠 Dashboard** — tổng quan hạm đội: KPI, phân phối rủi ro, bảo trì, top drone rủi ro.
 2. **🎯 Dự đoán** — 3 tab: mô phỏng Slider (kèm chọn hồ sơ dòng drone + radar chart), Form nhập
    thực địa (tự nhận dòng máy, lưu 49 cột chuẩn), Batch CSV (dự đoán hàng loạt).
-3. **🛫 Phiên bay** — phiên bay trực tiếp: mỗi chu kỳ 3 phút (demo: 10 giây) nhận **1 dòng telemetry
-   đúng format 49 cột** và phân tích tức thời: bay tiếp / giám sát / quay về / hạ cánh ngay.
+3. **🛫 Phiên bay** — phiên bay trực tiếp *human-in-the-loop*: mỗi tick (10 giây) nhận **1 dòng
+   telemetry đúng format 49 cột**, hệ thống phân tích và đưa khuyến nghị; **người quản lý có 30
+   giây để quyết định** (bay tiếp / quay về / hạ cánh) — quá hạn hệ thống **tự động** áp dụng
+   khuyến nghị.
 4. **📊 Phân tích drone** — drill-down lịch sử từng drone.
 5. **🤖 Model Info** — 4 tab: so sánh RF/DT/LR, chi tiết metrics + confusion matrix, feature
    importance, và **🧪 Nghiên cứu** (3 thí nghiệm đánh giá nâng cao).
@@ -104,18 +106,24 @@ dataset synthetic (vd. gió 0–50 m/s).
 
 Trang **🛫 Phiên bay** mô phỏng luồng telemetry vận hành thật đổ về DSS:
 
-- Bấm **Bắt đầu phiên bay** → mỗi chu kỳ (**3 phút/tick**, chế độ demo **10 giây/tick**) hệ thống
-  nhận 1 dòng dữ liệu **đúng format 49 cột** (simulator suy biến trạng thái: pin hao theo gió/tốc
-  độ, gió AR(1), vị trí GPS di chuyển theo heading) và phân tích ngay bằng pipeline sẵn có.
-- **Verdict mỗi tick:** ✅ Bay tiếp / 👁️ Giám sát / 🔙 Quay về trạm / 🛑 Hạ cánh ngay, với:
+- Bấm **Bắt đầu phiên bay** → mỗi tick (**10 giây**, tùy chọn 3 phút) hệ thống nhận 1 dòng dữ liệu
+  **đúng format 49 cột** (simulator suy biến trạng thái: pin hao theo gió/tốc độ, gió AR(1), vị
+  trí GPS di chuyển theo heading) và phân tích ngay bằng pipeline sẵn có → đưa **khuyến nghị**.
+- **Human-in-the-loop với fallback tự động (management by exception):** người quản lý có
+  **30 giây** để chọn ✅ Bay tiếp / 🔙 Quay về trạm / 🛑 Hạ cánh ngay (đếm ngược hiển thị trực
+  tiếp, nút được tô đậm là phương án hệ thống khuyến nghị). **Quá 30 giây → hệ thống tự động áp
+  dụng khuyến nghị.** Mọi quyết định đều ghi log kèm *ai quyết định*, *thời gian phản hồi* và cờ
+  *GHI ĐÈ* khi người quản lý chọn khác khuyến nghị — bảo đảm trách nhiệm giải trình.
+- **Khuyến nghị của hệ thống** tổng hợp từ 3 tầng: rule theo dòng máy, cùng:
   - **Leo thang:** 2 tick cảnh báo liên tiếp → tự nâng thành Quay về;
   - **Quay về chủ động (proactive):** dự báo pin tick kế < ngưỡng RTH của dòng máy → khuyến nghị
     quay về **trước khi** vi phạm;
   - **EWMA control chart** (λ=0.3) trên risk score phát hiện drift rủi ro tăng dần.
-- UI trực tiếp: biểu đồ pin/gió/EWMA theo tick, **bản đồ đường bay**, nhật ký telemetry, 3 nút
-  **tiêm sự cố** (gió giật / suy hao tín hiệu / sụt pin) để kiểm thử phản ứng hệ thống.
+- UI trực tiếp: biểu đồ pin/gió/EWMA theo tick, **bản đồ đường bay**, nhật ký telemetry & quyết
+  định, 3 nút **tiêm sự cố** (gió giật / suy hao tín hiệu / sụt pin) để kiểm thử phản ứng.
 - Mỗi tick được lưu qua `save_custom` → xuất hiện ngay trong Dashboard & Phân tích drone, kèm bản
-  sao `Data/live_session_log.csv` và nút tải nhật ký phiên.
+  sao `Data/live_session_log.csv`; màn tổng kết thống kê số quyết định của người quản lý vs tự
+  động, thời gian phản hồi trung bình và số lần ghi đè.
 
 ---
 

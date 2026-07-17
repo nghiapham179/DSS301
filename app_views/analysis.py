@@ -366,7 +366,7 @@ def render():
         fig_history.update_xaxes(showspikes=False)
         fig_history.update_yaxes(showspikes=False)
 
-        st.plotly_chart(style_chart(fig_history, 360), use_container_width=True)
+        st.plotly_chart(style_chart(fig_history, 360), width="stretch")
         st.markdown(f'<p class="chart-caption">{chart_caption}</p>', unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
@@ -459,7 +459,7 @@ def render():
         fig = px.histogram(df_d, x="risk_score", nbins=11,
                            color_discrete_sequence=[COLORS["accent"]], opacity=0.85)
         fig.update_traces(marker_line_width=0)
-        st.plotly_chart(style_chart(fig, 340), use_container_width=True)
+        st.plotly_chart(style_chart(fig, 340), width="stretch")
         st.caption(
             "📊 Phân bổ điểm rủi ro của riêng drone này. So với baseline fleet, "
             "phân phối lệch phải nhiều = drone thường xuyên ở trạng thái rủi ro cao."
@@ -471,7 +471,7 @@ def render():
         fig2 = px.scatter(sample, x="flight_time", y="battery_level",
                           color="operation_risk", opacity=0.65,
                           color_discrete_map=RISK_COLOR_MAP)
-        st.plotly_chart(style_chart(fig2, 340), use_container_width=True)
+        st.plotly_chart(style_chart(fig2, 340), width="stretch")
         st.caption(
             "🔋 Mối tương quan giữa thời gian bay và pin còn lại. Đường giảm dốc "
             "= pin tiêu hao nhanh, có thể do battery cell xuống cấp."
@@ -483,7 +483,7 @@ def render():
     fig3 = px.pie(mc, names="action", values="count", hole=0.55,
                   color_discrete_sequence=SEQ)
     fig3.update_traces(textfont_size=12)
-    st.plotly_chart(style_chart(fig3, 380), use_container_width=True)
+    st.plotly_chart(style_chart(fig3, 380), width="stretch")
     st.caption(
         "🥯 Donut chart cho thấy tỉ lệ các hành động bảo trì cho drone này. "
         "Mảng **Monitor / No maintenance** lớn = drone đang khoẻ; "

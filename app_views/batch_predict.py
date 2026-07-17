@@ -103,9 +103,10 @@ def render():
 
                 # 4. Dự đoán
                 st.write("Đang chạy mô hình dự đoán...")
-                risk_preds = risk_model.predict(df_clean)
-                maint_preds = maint_model.predict(df_clean)
-                recom_preds = recom_model.predict(df_clean)
+                X_batch = df_clean.to_numpy()   # model fit không tên cột — tránh sklearn warning
+                risk_preds = risk_model.predict(X_batch)
+                maint_preds = maint_model.predict(X_batch)
+                recom_preds = recom_model.predict(X_batch)
 
                 # 5. Decode kết quả (Chuyển từ số về nhãn chữ)
                 st.write("Đang giải mã nhãn dự đoán...")
@@ -125,7 +126,7 @@ def render():
 
         st.markdown("#### 🔍 Bản xem trước kết quả")
         # Hiển thị 10 dòng đầu tiên để user kiểm tra
-        st.dataframe(df_raw.head(10), use_container_width=True)
+        st.dataframe(df_raw.head(10), width="stretch")
 
         # Nút tải file CSV
         csv_data = df_raw.to_csv(index=False).encode('utf-8')
@@ -135,5 +136,5 @@ def render():
             file_name="drone_batch_predictions.csv",
             mime="text/csv",
             type="primary",
-            use_container_width=True
+            width="stretch"
         )

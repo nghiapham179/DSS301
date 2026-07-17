@@ -215,7 +215,9 @@ def load_data():
     if not DATA_PATH.exists():
         raise FileNotFoundError(f"Khong tim thay: {DATA_PATH}")
 
-    df = pd.read_csv(DATA_PATH)
+    # low_memory=False: suy kieu nhat quan tren ca cot (dataset goc co 1 o
+    # rac trong wind_direction lam pandas canh bao mixed types).
+    df = pd.read_csv(DATA_PATH, low_memory=False)
     log(f"  Rows    : {len(df):,}")
     log(f"  Columns : {df.shape[1]}")
 

@@ -160,7 +160,7 @@ def _render_overview_tab(all_metrics: dict):
     display_df["MAE"]            = display_df["MAE"].apply(lambda x: f"{x:.4f}")
     display_df["Combined Score"] = display_df["Combined Score"].apply(lambda x: f"{x:.4f}")
 
-    st.dataframe(display_df, use_container_width=True, hide_index=True)
+    st.dataframe(display_df, width="stretch", hide_index=True)
     st.caption(
         "💡 **Combined Score** = CV Mean × F1 Macro. "
         "**RMSE / MAE** tính trên nhãn encoded — càng gần 0 càng tốt."
@@ -222,7 +222,7 @@ def _render_overview_tab(all_metrics: dict):
             "Avg RMSE":     "{:.4f}",
             "Avg MAE":      "{:.4f}",
         })
-        st.dataframe(styled, use_container_width=True, hide_index=True)
+        st.dataframe(styled, width="stretch", hide_index=True)
 
         fig = go.Figure()
         algos  = algo_df["Thuật Toán"].tolist()
@@ -245,7 +245,7 @@ def _render_overview_tab(all_metrics: dict):
         )
         st.plotly_chart(
             style_chart(fig, 360),
-            use_container_width=True,
+            width="stretch",
             config={"displayModeBar": False},
         )
 
@@ -322,7 +322,7 @@ def _render_detail_tab(all_metrics: dict):
         fig_cm = render_confusion_matrix_heatmap(m["confusion_matrix"], m["classes"])
         st.plotly_chart(
             style_chart(fig_cm, 300),
-            use_container_width=True,
+            width="stretch",
             config={"displayModeBar": False},
         )
 
@@ -363,7 +363,7 @@ def _render_detail_tab(all_metrics: dict):
                 "RMSE":      "{:.4f}",
                 "MAE":       "{:.4f}",
             }),
-            use_container_width=True,
+            width="stretch",
             hide_index=True,
         )
 
@@ -394,7 +394,7 @@ def _render_impact_tab():
 
     st.plotly_chart(
         style_chart(render_feature_importance_chart(fi_df)),
-        use_container_width=True,
+        width="stretch",
         config={"displayModeBar": False},
     )
 
@@ -498,7 +498,7 @@ def _render_generalization_section(all_metrics: dict):
                    range=[0, 1.12]),
         legend=dict(orientation="h", y=1.14, x=0.5, xanchor="center"),
     )
-    st.plotly_chart(style_chart(fig, 380), use_container_width=True,
+    st.plotly_chart(style_chart(fig, 380), width="stretch",
                     config={"displayModeBar": False})
 
     gap_df = pd.DataFrame([{
@@ -507,7 +507,7 @@ def _render_generalization_section(all_metrics: dict):
         "Group CV (drone mới)": f"{r['group_mean']:.2%} ±{r['group_std']:.2%}",
         "Leakage gap":       f"{r['gap']:+.4f}",
     } for r in rows])
-    st.dataframe(gap_df, use_container_width=True, hide_index=True)
+    st.dataframe(gap_df, width="stretch", hide_index=True)
 
     max_gap = max(abs(r["gap"]) for r in rows)
     if max_gap < 0.01:
@@ -577,7 +577,7 @@ def _render_noise_section():
             yaxis=dict(title="Accuracy trên test SẠCH", tickformat=".0%"),
             legend=dict(orientation="h", y=1.15, x=0.5, xanchor="center"),
         )
-        st.plotly_chart(style_chart(fig, 360), use_container_width=True,
+        st.plotly_chart(style_chart(fig, 360), width="stretch",
                         config={"displayModeBar": False})
         st.caption("Accuracy trên test sạch theo mức nhiễu train.")
 
@@ -599,7 +599,7 @@ def _render_noise_section():
             yaxis=dict(title="Recall lớp High (an toàn)", tickformat=".0%"),
             legend=dict(orientation="h", y=1.15, x=0.5, xanchor="center"),
         )
-        st.plotly_chart(style_chart(fig, 360), use_container_width=True,
+        st.plotly_chart(style_chart(fig, 360), width="stretch",
                         config={"displayModeBar": False})
         st.caption("Recall lớp High — tỷ lệ tình huống nguy hiểm KHÔNG bị bỏ sót.")
 
@@ -608,7 +608,7 @@ def _render_noise_section():
         "Flip thực tế (%)":     f"{lv['effective_train_noise_pct']:.1f}%",
         **{f"{algo}": f"{lv['results'][algo]['accuracy']:.2%}" for algo in algos},
     } for lv in levels])
-    st.dataframe(tbl, use_container_width=True, hide_index=True)
+    st.dataframe(tbl, width="stretch", hide_index=True)
 
     # Nhận xét tự động: thuật toán bền nhiễu nhất = giảm accuracy ít nhất,
     # nhưng CHỈ so giữa các mô hình có baseline mạnh (>= 90% ở mức nhiễu 0) —
@@ -680,7 +680,7 @@ def _render_cost_section():
 
         st.dataframe(
             C.style.format("{:.0f}").map(_shade),
-            use_container_width=True,
+            width="stretch",
         )
         st.caption(
             "Bỏ sót hoàn toàn High (dự đoán Low) = 10 điểm — đắt gấp 10 lần "
@@ -769,7 +769,7 @@ def _render_cost_section():
                         showgrid=False),
             legend=dict(orientation="h", y=1.15, x=0.5, xanchor="center"),
         )
-        st.plotly_chart(style_chart(fig, 380), use_container_width=True,
+        st.plotly_chart(style_chart(fig, 380), width="stretch",
                         config={"displayModeBar": False})
         st.caption(
             "💡 Đường cong độ nhạy theo ngưỡng τ (mô tả trade-off, tính trên "
