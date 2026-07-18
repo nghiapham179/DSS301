@@ -30,7 +30,7 @@ def load_css():
         """
         <style>
         /* Font display=swap → text hiện ngay, không bị FOIT khi font load */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
         /* ── DESIGN TOKENS ─────────────────────────────────────── */
         :root {
@@ -89,8 +89,14 @@ def load_css():
         }
         [data-testid="stMarkdownContainer"] p {
             color: var(--text-primary) !important;
-            line-height: 1.65 !important;
+            line-height: 1.5 !important;
         }
+        /* Body 14.5px CHỈ cho đoạn văn trơn — p có class/style tự mang cỡ
+           riêng (KPI 32px, section label 17px...), không được đè chúng. */
+        [data-testid="stMarkdownContainer"] p:not([class]):not([style]) {
+            font-size: 14.5px !important;
+        }
+        [data-testid="stCaptionContainer"] p { font-size: 12.5px !important; }
 
         /* ── CARD (st.container border=True) ───────────────────── */
         div[data-testid="stVerticalBlockBorderWrapper"] {
@@ -113,7 +119,7 @@ def load_css():
         div[data-testid="stMetricLabel"] { margin-bottom: 4px !important; }
         div[data-testid="stMetricLabel"] * {
             color: var(--text-secondary) !important;
-            font-size: 0.76rem !important;
+            font-size: 12.5px !important;
             font-weight: 600 !important;
             text-transform: uppercase !important;
             letter-spacing: 0.07em !important;
@@ -121,20 +127,20 @@ def load_css():
         div[data-testid="stMetricValue"] {
             font-family: 'JetBrains Mono', monospace !important;
             color: var(--text-primary) !important;
-            font-size: 1.9rem !important;
-            font-weight: 600 !important;
+            font-size: 26px !important;
+            font-weight: 700 !important;
             line-height: 1.2 !important;
         }
         div[data-testid="stMetricDelta"] { margin-top: 5px !important; }
         div[data-testid="stMetricDelta"] * {
-            font-size: 0.78rem !important;
+            font-size: 12px !important;
             font-weight: 600 !important;
         }
 
         .drone-note {
             display: block;
             color: var(--text-muted) !important;
-            font-size: 0.75rem !important;
+            font-size: 12px !important;
             margin-top: 10px !important;
             padding-top: 9px !important;
             border-top: 1px solid var(--border) !important;
@@ -159,7 +165,7 @@ def load_css():
             border: 1px solid var(--border) !important;
             border-radius: var(--radius-md) !important;
             color: var(--text-primary) !important;
-            font-size: 0.87rem !important;
+            font-size: 14px !important;
             transition: border-color var(--transition),
                         box-shadow var(--transition) !important;
         }
@@ -175,7 +181,7 @@ def load_css():
             border: none !important;
             border-radius: var(--radius-md) !important;
             font-weight: 600 !important;
-            font-size: 0.88rem !important;
+            font-size: 14px !important;
             padding: 10px 24px !important;
             transition: opacity var(--transition) !important;
         }
@@ -199,7 +205,7 @@ def load_css():
             gap: 4px;
             padding: 3px 10px;
             border-radius: 999px;
-            font-size: 0.72rem;
+            font-size: 12px;
             font-weight: 700;
             letter-spacing: 0.04em;
         }
@@ -209,7 +215,7 @@ def load_css():
             gap: 6px;
             padding: 4px 11px;
             border-radius: 999px;
-            font-size: 0.72rem;
+            font-size: 12px;
             font-weight: 700;
         }
 
@@ -234,7 +240,7 @@ def load_css():
         }
         [data-testid="stExpander"] summary {
             font-weight: 600 !important;
-            font-size: 0.88rem !important;
+            font-size: 14px !important;
             color: var(--text-primary) !important;
         }
 
@@ -251,7 +257,7 @@ def load_css():
             border-radius: 6px;
             transition: width .6s cubic-bezier(.4,0,.2,1);
         }
-        .prog-label { font-size: 0.68rem; color: var(--text-muted); margin: 0; }
+        .prog-label { font-size: 12px; color: var(--text-muted); margin: 0; }
 
         /* ── HIDE STREAMLIT CHROME ─────────────────────────────── */
         /* KHÔNG dùng display:none cho stHeader / stToolbar: nút mở lại
@@ -322,13 +328,181 @@ def load_css():
         hr { border-top: 1px solid var(--border) !important; }
 
         [data-testid="stCaptionContainer"] {
-            font-size: 0.78rem !important;
+            font-size: 12.5px !important;
             color: var(--text-secondary) !important;
             line-height: 1.55 !important;
             padding: 0 4px !important;
             margin-top: 4px !important;
         }
         .js-plotly-plot .plotly .modebar { display: none !important; }
+
+        /* ── DESIGN SYSTEM: HERO KẾT LUẬN ──────────────────────── */
+        .conc-hero {
+            position: relative; overflow: hidden;
+            background: var(--hero-bg);
+            border-radius: var(--radius-lg);
+            padding: 26px 28px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 4px;
+        }
+        .conc-hero .ch-glow {
+            position: absolute; top: -70px; right: -50px;
+            width: 260px; height: 260px; pointer-events: none;
+            background: radial-gradient(circle, rgba(200,232,90,.14) 0%, transparent 66%);
+        }
+        /* !important + độ đặc hiệu cao: thắng rule toàn cục
+           [data-testid="stMarkdownContainer"] p (nhuộm đen mọi <p>) —
+           nếu không, chữ trắng trong hero nền tối sẽ tàng hình. */
+        [data-testid="stMarkdownContainer"] .conc-hero .ch-eyebrow {
+            position: relative; margin: 0 0 10px;
+            font-size: 12px; font-weight: 700; letter-spacing: .13em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.45) !important;
+        }
+        [data-testid="stMarkdownContainer"] .conc-hero .ch-headline {
+            position: relative; margin: 0;
+            font-size: 21px; line-height: 1.5 !important; font-weight: 700;
+            color: #ffffff !important; max-width: 78ch;
+        }
+        [data-testid="stMarkdownContainer"] .conc-hero .ch-headline .hl {
+            color: var(--lime) !important; font-weight: 700;
+        }
+        .conc-hero .ch-stats {
+            position: relative; display: flex; flex-wrap: wrap; gap: 34px;
+            margin-top: 20px; padding-top: 18px;
+            border-top: 1px solid rgba(255,255,255,.10);
+        }
+        .conc-hero .ch-stat-v {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 30px; font-weight: 700; color: #fff; line-height: 1.1;
+        }
+        .conc-hero .ch-stat-l {
+            font-size: 12.5px; color: rgba(255,255,255,.55);
+            margin-top: 4px; letter-spacing: .02em;
+        }
+
+        /* ── DESIGN SYSTEM: CALLOUT ────────────────────────────── */
+        .dss-callout {
+            display: flex; gap: 13px; align-items: flex-start;
+            border-radius: var(--radius-md);
+            padding: 15px 18px; margin: 4px 0 6px;
+            background: var(--accent-light);
+            border: 1px solid rgba(79,99,210,.16);
+        }
+        .dss-callout.tone-success { background: var(--c-success-bg); border-color: rgba(22,163,74,.18); }
+        .dss-callout.tone-warning { background: var(--c-warning-bg); border-color: rgba(217,119,6,.18); }
+        .dss-callout.tone-danger  { background: var(--c-danger-bg);  border-color: rgba(220,38,38,.18); }
+        .dss-callout .co-icon { font-size: 17px; line-height: 1.4; }
+        .dss-callout .co-title {
+            margin: 0 0 3px; font-size: 13.5px; font-weight: 700; color: var(--text-primary);
+        }
+        .dss-callout .co-text {
+            margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-secondary);
+        }
+
+        /* ── DESIGN SYSTEM: PANEL + THANH SO SÁNH ──────────────── */
+        .dss-panel {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-md); padding: 20px 22px;
+            box-shadow: var(--shadow-sm); height: 100%;
+        }
+        .dss-panel-title {
+            margin: 0 0 16px; font-size: 17px; font-weight: 700; color: var(--text-primary);
+        }
+        .cb-row { margin-bottom: 14px; }
+        .cb-head {
+            display: flex; justify-content: space-between; align-items: baseline;
+            font-size: 13.5px; color: var(--text-secondary); margin-bottom: 6px;
+        }
+        .cb-val { font-family: 'JetBrains Mono', monospace; font-size: 15px; }
+        .cb-val.tone-success { color: var(--c-success); }
+        .cb-val.tone-danger  { color: var(--c-danger); }
+        .cb-val.tone-primary { color: var(--accent); }
+        .cb-track {
+            height: 8px; border-radius: 999px; background: var(--bg-card-alt); overflow: hidden;
+        }
+        .cb-fill { height: 100%; border-radius: 999px; }
+        .cb-fill.tone-success { background: var(--c-success); }
+        .cb-fill.tone-danger  { background: var(--c-danger); }
+        .cb-fill.tone-primary { background: var(--accent); }
+        .cb-note {
+            margin: 12px 0 0; font-size: 12px; line-height: 1.5; color: var(--text-muted);
+        }
+
+        /* ── DESIGN SYSTEM: THẺ QUYẾT ĐỊNH ─────────────────────── */
+        .dc-card { display: flex; flex-direction: column; }
+        .dc-role {
+            margin: 0 0 6px; font-size: 12px; font-weight: 700;
+            letter-spacing: .13em; text-transform: uppercase; color: var(--accent);
+        }
+        .dc-question {
+            margin: 0 0 14px; font-size: 14.5px; font-weight: 600;
+            line-height: 1.5; color: var(--text-primary);
+        }
+        .dc-foot {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border);
+        }
+        .dc-acc {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 26px; font-weight: 700; color: var(--text-primary);
+        }
+        .dc-acc-l { font-size: 12px; color: var(--text-muted); margin-left: 5px; }
+        .dc-target {
+            font-family: 'JetBrains Mono', monospace; font-size: 12px;
+            background: var(--bg-card-alt); color: var(--text-secondary);
+            padding: 3px 8px; border-radius: 6px;
+        }
+        .dc-extra {
+            margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: var(--text-muted);
+        }
+
+        /* ── DESIGN SYSTEM: MODEL DETAIL (tab 2 & 3) ───────────── */
+        .mi-head {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 18px; flex-wrap: wrap;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-md); padding: 18px 22px;
+            box-shadow: var(--shadow-sm); margin-bottom: 4px;
+        }
+        .mi-head .mh-title { margin: 0; font-size: 17px; font-weight: 700;
+                             color: var(--text-primary); }
+        .mi-head .mh-role  {
+            display: inline-block; margin-top: 5px;
+            font-size: 12px; font-weight: 700; letter-spacing: .13em;
+            text-transform: uppercase; color: var(--accent);
+            background: var(--accent-light); border-radius: 999px; padding: 3px 10px;
+        }
+        .mi-head .mh-acc   {
+            font-family: 'JetBrains Mono', monospace; text-align: right;
+            font-size: 32px; font-weight: 700; color: var(--accent); line-height: 1.05;
+        }
+        .mi-head .mh-acc-l { font-size: 12.5px; color: var(--text-muted);
+                             text-align: right; margin-top: 3px; }
+
+        .cv-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-md); padding: 16px 18px;
+            box-shadow: var(--shadow-sm); text-align: center;
+        }
+        .cv-card.ok { border-color: rgba(22,163,74,.4); }
+        .cv-card .cv-v {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 26px; font-weight: 700; color: var(--text-primary);
+        }
+        .cv-card.ok .cv-v { color: var(--c-success); }
+        .cv-card .cv-l { font-size: 12.5px; color: var(--text-muted); margin-top: 4px; }
+
+        /* Pill selector (st.segmented_control) — pill active nền primary.
+           DOM thật của Streamlit 1.58: [data-testid="stButtonGroup"] chứa
+           button[kind="segmented_control"|"segmented_controlActive"]. */
+        [data-testid="stButtonGroup"] button { border-radius: 999px !important; }
+        [data-testid="stButtonGroup"] button p { font-size: 14px !important; font-weight: 600 !important; }
+        button[kind="segmented_controlActive"] {
+            background: var(--accent) !important;
+            border-color: var(--accent) !important;
+        }
+        button[kind="segmented_controlActive"] p { color: #fff !important; }
 
         /* ─────────────────────────────────────────────────────────
            ANIMATIONS — tôn trọng prefers-reduced-motion
@@ -374,7 +548,7 @@ def load_css():
         }
         .dss-hero-eyebrow {
             color: rgba(255,255,255,.55);
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
             letter-spacing: .05em;
             text-transform: uppercase;
@@ -382,14 +556,14 @@ def load_css():
         }
         .dss-hero-big {
             color: #fff;
-            font-size: 2.2rem;
+            font-size: 32px;
             font-weight: 700;
             margin: 0;
             line-height: 1.1;
             font-family: 'JetBrains Mono', monospace;
         }
         .dss-hero-unit {
-            font-size: .9rem;
+            font-size: 13px;
             color: rgba(255,255,255,.5);
             font-weight: 500;
             font-family: 'Inter', sans-serif;
@@ -438,7 +612,7 @@ def load_css():
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 13px;
+            font-size: 13.5px;
             color: rgba(255,255,255,.7);
             width: 130px;
             margin-bottom: 2px;
@@ -480,7 +654,7 @@ def load_css():
             align-items: center;
             gap: 7px;
             color: var(--text-secondary);
-            font-size: .7rem;
+            font-size: 12.5px;
             font-weight: 600;
             letter-spacing: .04em;
             text-transform: uppercase;
@@ -488,14 +662,14 @@ def load_css():
         }
         .dss-kpi-icon { color: var(--accent); }
         .dss-kpi-value {
-            font-size: 1.5rem;
+            font-size: 32px;
             font-weight: 700;
             margin: 7px 0 0;
             color: var(--text-primary);
             font-family: 'JetBrains Mono', monospace;
             letter-spacing: -.01em;
         }
-        .dss-kpi-delta { font-size: .72rem; font-weight: 600; margin: 3px 0 0; }
+        .dss-kpi-delta { font-size: 12px; font-weight: 600; margin: 3px 0 0; }
 
         /* ── LIVE BUTTON ───────────────────────────────────────── */
         .dss-live {
@@ -504,7 +678,7 @@ def load_css():
             border: none;
             border-radius: 11px;
             padding: 8px 15px;
-            font-size: .78rem;
+            font-size: 12.5px;
             font-weight: 700;
             display: inline-flex;
             align-items: center;
@@ -512,10 +686,10 @@ def load_css():
         }
 
         /* ── RECORDS TABLE ─────────────────────────────────────── */
-        .dss-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+        .dss-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
         .dss-table th {
             color: var(--text-muted);
-            font-size: .66rem;
+            font-size: 12px;
             font-weight: 700;
             letter-spacing: .05em;
             text-transform: uppercase;
@@ -541,8 +715,8 @@ def load_css():
             border: 1px solid rgba(255,255,255,0.06) !important;
             border-radius: var(--radius-md) !important;
             padding: 11px 14px !important;
-            font-size: 0.88rem !important;
-            font-weight: 500 !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
             text-align: left !important;
             margin-bottom: 6px !important;
             box-shadow: none !important;
@@ -560,7 +734,7 @@ def load_css():
             border: 1px solid rgba(79,99,210,0.55) !important;
             border-radius: var(--radius-md) !important;
             padding: 11px 14px !important;
-            font-size: 0.88rem !important;
+            font-size: 14px !important;
             font-weight: 600 !important;
             text-align: left !important;
             margin-bottom: 6px !important;
@@ -570,6 +744,60 @@ def load_css():
         section[data-testid="stSidebar"] button p {
             text-align: left !important;
             margin: 0 !important;
+        }
+
+        /* ── TYPE SCALE bổ sung (design handoff) ───────────────── */
+        .stTabs [data-baseweb="tab"] p {
+            font-size: 14px !important; font-weight: 600 !important;
+        }
+        .stButton button p, .stDownloadButton button p {
+            font-size: 14px !important; font-weight: 600 !important;
+        }
+        [data-testid="stTable"] table { font-size: 13.5px !important; }
+
+        /* ── TYPE SCALE enforcement ─────────────────────────────
+           Streamlit (emotion) có rule `.st-emotion-xxx p {font-size:inherit}`
+           đặc hiệu 0-1-1, THẮNG mọi class đơn 0-1-0 của ta → cỡ chữ class
+           bị vô hiệu. Khối này ép lại bằng !important cho toàn bộ thang. */
+        .dss-kpi-value   { font-size: 32px !important; }
+        .dss-kpi-label   { font-size: 12.5px !important; }
+        .dss-kpi-delta   { font-size: 12px !important; }
+        .dss-hero-eyebrow{ font-size: 12px !important; }
+        .dss-hero-big    { font-size: 32px !important; }
+        .dss-hero-unit   { font-size: 13px !important; }
+        .prog-label      { font-size: 12px !important; }
+        .status-badge, .dss-pill { font-size: 12px !important; }
+        .dss-live        { font-size: 12.5px !important; }
+        .dss-legend-row  { font-size: 13.5px !important; }
+        .dss-table       { font-size: 13.5px !important; }
+        .dss-table th    { font-size: 12px !important; }
+        .dss-panel-title { font-size: 17px !important; }
+        .cb-head  { font-size: 13.5px !important; }
+        .cb-val   { font-size: 15px !important; }
+        .cb-note  { font-size: 12px !important; }
+        .co-title { font-size: 13.5px !important; }
+        .co-text  { font-size: 13px !important; }
+        .dc-role  { font-size: 12px !important; }
+        .dc-question { font-size: 14.5px !important; }
+        .dc-acc   { font-size: 26px !important; }
+        .dc-acc-l, .dc-target, .dc-extra { font-size: 12px !important; }
+        .mh-title { font-size: 17px !important; }
+        .mh-role  { font-size: 12px !important; }
+        .mh-acc   { font-size: 32px !important; }
+        .mh-acc-l { font-size: 12.5px !important; }
+        .cv-v { font-size: 26px !important; }
+        .cv-l { font-size: 12.5px !important; }
+        .ch-eyebrow { font-size: 12px !important; }
+        .ch-headline{ font-size: 21px !important; }
+        .ch-stat-v  { font-size: 30px !important; }
+        .ch-stat-l  { font-size: 12.5px !important; }
+        /* Hai rule dưới cần đặc hiệu ≥ (0,3,1) để thắng rule body
+           p:not([class]):not([style]) ở trên (đặt sau nên thắng khi hòa). */
+        [data-testid="stMetricLabel"] [data-testid="stMarkdownContainer"] p:not([class]) {
+            font-size: 12.5px !important; font-weight: 600 !important;
+        }
+        [data-testid="stTabs"] button[data-baseweb="tab"] p:not([class]) {
+            font-size: 14px !important; font-weight: 600 !important;
         }
         </style>
         """,
@@ -644,11 +872,11 @@ def render_top_nav(title: str = "Dashboard",
         st.markdown(
             f"""
                 <div style="padding:4px 0;">
-                    <h2 style="margin:0;font-size:1.35rem;font-weight:700;
+                    <h2 style="margin:0;font-size:17px;font-weight:700;
                                letter-spacing:-0.025em;color:var(--text-primary);">
                         {title}
                     </h2>
-                    <p style="margin:2px 0 0;font-size:0.78rem;
+                    <p style="margin:2px 0 0;font-size:12.5px;
                               color:var(--text-secondary);font-weight:400;">
                         {subtitle}
                     </p>
@@ -665,12 +893,12 @@ def render_top_nav(title: str = "Dashboard",
                     <span class="dss-dot dss-pulse" style="background:var(--lime-ink);"></span>
                     Giám sát trực tiếp
                 </span>
-                <span style="font-size:1.25rem;cursor:pointer;color:var(--text-secondary);"
+                <span style="font-size:20px;cursor:pointer;color:var(--text-secondary);"
                       title="Quản lý Fleet">🚁</span>
                 <div style="width:34px;height:34px;border-radius:50%;
                             background:var(--accent-light);display:flex;
                             justify-content:center;align-items:center;
-                            font-weight:700;font-size:0.72rem;color:var(--accent);
+                            font-weight:700;font-size:12px;color:var(--accent);
                             border:1.5px solid var(--accent-muted);"
                      title="Admin">AD</div>
             </div>
@@ -684,12 +912,12 @@ def render_top_nav(title: str = "Dashboard",
 def render_page_title(title: str, subtitle: str = ""):
     """Page section title with optional muted subtitle."""
     sub = (
-        f"<p style='font-size:0.8rem;color:var(--text-secondary);margin:2px 0 0;'>{subtitle}</p>"
+        f"<p style='font-size:14.5px;color:var(--text-secondary);margin:4px 0 0;line-height:1.5;max-width:680px;'>{subtitle}</p>"
         if subtitle else ""
     )
     st.markdown(
         f"""<div style="margin-bottom:16px;">
-                <h3 style="font-weight:700;font-size:1.12rem;letter-spacing:-0.02em;
+                <h3 style="font-weight:800;font-size:28px;letter-spacing:-0.02em;
                            margin:0;color:var(--text-primary);">{title}</h3>{sub}
             </div>""",
         unsafe_allow_html=True,
@@ -699,8 +927,8 @@ def render_page_title(title: str, subtitle: str = ""):
 def render_section_label(text: str):
     """Eyebrow label — small, uppercase, letter-spaced."""
     st.markdown(
-        f"""<p style="font-size:0.68rem;font-weight:700;text-transform:uppercase;
-                      letter-spacing:0.09em;color:var(--text-muted);margin:20px 0 8px;">
+        f"""<p style="font-size:17px;font-weight:700;
+                      color:var(--text-primary);margin:22px 0 10px;">
                 {text}</p>""",
         unsafe_allow_html=True,
     )
@@ -835,7 +1063,7 @@ def render_hero_panel(total_records: int, avg_score: float,
               <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                 <div>
                   <p class="dss-hero-eyebrow">Phân phối điểm rủi ro</p>
-                  <p style="font-size:0.75rem;color:rgba(255,255,255,.55);margin:0 0 10px 0;line-height:1.4;max-width:85%;">
+                  <p style="font-size:12.5px;color:rgba(255,255,255,.55);margin:0 0 10px 0;line-height:1.5;max-width:85%;">
                     Số lượng bản ghi theo thang điểm rủi ro (0-10). Di chuột vào cột để xem chi tiết.
                   </p>
                   <p class="dss-hero-big">{total_records:,} <span class="dss-hero-unit">bản ghi</span></p>
@@ -850,7 +1078,7 @@ def render_hero_panel(total_records: int, avg_score: float,
             <div class="dss-hero-sub">
               <div>
                 <p class="dss-hero-eyebrow">Tổng quan rủi ro</p>
-                <p style="font-size:0.75rem;color:rgba(255,255,255,.55);margin:0 0 8px 0;line-height:1.4;">
+                <p style="font-size:12.5px;color:rgba(255,255,255,.55);margin:0 0 8px 0;line-height:1.5;">
                   Điểm trung bình và tỷ lệ phân bổ trạng thái bay của toàn hệ thống.
                 </p>
               </div>
@@ -932,10 +1160,10 @@ def render_drone_records_table(rows: list, title: str = "Bản ghi drone"):
             <div style="background:var(--bg-card);border:1px solid var(--border);
                         border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);
                         padding:16px;margin-bottom:18px;">
-              <p style="font-size:.95rem;font-weight:700;margin:0 0 12px;color:var(--text-primary);">
+              <p style="font-size:17px;font-weight:700;margin:0 0 12px;color:var(--text-primary);">
                  {title}
                  <span style="background:var(--bg-card-alt);color:var(--text-secondary);
-                              font-size:.66rem;font-weight:700;padding:2px 8px;
+                              font-size:12px;font-weight:700;padding:2px 8px;
                               border-radius:7px;margin-left:6px;">{len(rows)}</span>
               </p>
               <table class="dss-table">
@@ -966,6 +1194,92 @@ def render_result_badge(label: str, value: str, level: str = "info"):
 def render_banner(text: str, level: str = "info"):
     """Short notification banner (wrapper for render_result_badge)."""
     render_result_badge("", text, level)
+
+
+# ═════════════════════════════════════════════════════════════════════
+#  RENDER — DESIGN SYSTEM COMPONENTS (theo bản thiết kế Drone DSS)
+# ═════════════════════════════════════════════════════════════════════
+
+def render_conclusion_hero(headline_html: str, stats: list):
+    """
+    Hero "Kết luận trong 1 câu" — nền tối, vệt sáng lime, kèm dãy số lớn.
+
+    headline_html : câu kết luận (cho phép <b class='hl'>…</b> để tô lime)
+    stats         : list of (value, label) — các số lớn hiển thị bên dưới
+    """
+    stat_html = "".join(
+        f"<div class='ch-stat'><div class='ch-stat-v'>{v}</div>"
+        f"<div class='ch-stat-l'>{l}</div></div>"
+        for v, l in stats
+    )
+    st.markdown(
+        f"""
+        <div class="conc-hero">
+          <div class="ch-glow"></div>
+          <p class="ch-eyebrow">Kết luận trong 1 câu</p>
+          <p class="ch-headline">{headline_html}</p>
+          <div class="ch-stats">{stat_html}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_callout(title: str, body: str, icon: str = "💡", tone: str = "primary"):
+    """Callout giải thích — nền nhạt theo tone (primary/success/warning/danger)."""
+    st.markdown(
+        f"""
+        <div class="dss-callout tone-{tone}">
+          <span class="co-icon">{icon}</span>
+          <div class="co-body">
+            <p class="co-title">{title}</p>
+            <p class="co-text">{body}</p>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_compare_bars(title: str, rows: list, note: str = ""):
+    """
+    Thẻ insight có thanh ngang so sánh.
+    rows: list of (label, value_text, pct_width 0-100, tone)
+    """
+    bars = "".join(
+        f"""<div class="cb-row">
+              <div class="cb-head"><span>{lbl}</span><b class="cb-val tone-{tone}">{val}</b></div>
+              <div class="cb-track"><div class="cb-fill tone-{tone}" style="width:{pct}%"></div></div>
+            </div>"""
+        for lbl, val, pct, tone in rows
+    )
+    note_html = f"<p class='cb-note'>{note}</p>" if note else ""
+    st.markdown(
+        f"""<div class="dss-panel">
+              <p class="dss-panel-title">{title}</p>
+              {bars}{note_html}
+            </div>""",
+        unsafe_allow_html=True,
+    )
+
+
+def render_decision_card(role: str, question: str, target: str,
+                         accuracy: str, extra: str = ""):
+    """Thẻ 'mô hình phục vụ quyết định nào cho ai'."""
+    extra_html = f"<p class='dc-extra'>{extra}</p>" if extra else ""
+    st.markdown(
+        f"""<div class="dss-panel dc-card">
+              <p class="dc-role">{role}</p>
+              <p class="dc-question">{question}</p>
+              <div class="dc-foot">
+                <div><span class="dc-acc">{accuracy}</span>
+                     <span class="dc-acc-l">accuracy</span></div>
+                <code class="dc-target">{target}</code>
+              </div>
+              {extra_html}
+            </div>""",
+        unsafe_allow_html=True,
+    )
 
 
 # ═════════════════════════════════════════════════════════════════════
@@ -1024,7 +1338,7 @@ def render_class_f1_table(classes: list, f1_scores: dict,
                 <div style="display:flex;align-items:center;gap:10px;
                             padding:5px 0;border-bottom:1px solid #eef0f5;
                             font-family:Inter,system-ui,sans-serif;">
-                    <span style="font-size:0.8rem;font-weight:600;color:#1c1e2e;
+                    <span style="font-size:13.5px;font-weight:600;color:#1c1e2e;
                                  min-width:170px;max-width:170px;
                                  white-space:nowrap;overflow:hidden;
                                  text-overflow:ellipsis;" title="{cls}">
@@ -1036,11 +1350,11 @@ def render_class_f1_table(classes: list, f1_scores: dict,
                                     height:100%;border-radius:3px;"></div>
                     </div>
                     <span style="font-family:'JetBrains Mono',monospace;
-                                 font-size:0.85rem;font-weight:600;
+                                 font-size:15px;font-weight:600;
                                  color:{txt_col};min-width:38px;text-align:right;">
                         {f1:.2f}
                     </span>
-                    <span style="font-size:0.7rem;color:#9da3b5;
+                    <span style="font-size:12px;color:#9da3b5;
                                  font-family:'JetBrains Mono',monospace;
                                  min-width:96px;text-align:right;">
                         {extra}
@@ -1157,11 +1471,11 @@ def render_sidebar_header():
             <div style="width:32px;height:32px;border-radius:8px;
                         background:rgba(79,99,210,.28);display:flex;
                         align-items:center;justify-content:center;
-                        font-size:1.15rem;line-height:1;">🚁</div>
+                        font-size:18px;line-height:1;">🚁</div>
             <div>
-                <p style="margin:0;font-size:0.98rem;font-weight:700;
+                <p style="margin:0;font-size:14px;font-weight:700;
                           color:#fff;letter-spacing:-0.02em;">Drone DSS</p>
-                <p style="margin:0;font-size:0.62rem;color:rgba(255,255,255,.35);
+                <p style="margin:0;font-size:11px;color:rgba(255,255,255,.35);
                           font-weight:500;letter-spacing:.05em;text-transform:uppercase;">
                     DSS301 &nbsp;·&nbsp; Warranty &amp; Ops</p>
             </div>

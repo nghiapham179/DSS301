@@ -574,13 +574,13 @@ def style_chart(fig: go.Figure, height: int = None) -> go.Figure:
         template="plotly_white",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#64697a", family="Inter, system-ui, sans-serif", size=12),
+        font=dict(color="#64697a", family="Inter, system-ui, sans-serif", size=12.5),
         margin=dict(t=28, b=16, l=12, r=12),
         legend=dict(
             bgcolor="rgba(255,255,255,.8)",
             bordercolor="rgba(0,0,0,.06)",
             borderwidth=1,
-            font=dict(color="#1c1e2e", size=11),
+            font=dict(color="#1c1e2e", size=12),
         ),
         **({"height": height} if height else {}),
     )

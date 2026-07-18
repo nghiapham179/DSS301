@@ -44,7 +44,7 @@ with st.sidebar:
     render_sidebar_header()
 
     st.markdown(
-        "<p style='font-size:.62rem;font-weight:700;text-transform:uppercase;"
+        "<p style='font-size:11px;font-weight:700;text-transform:uppercase;"
         "letter-spacing:.08em;color:rgba(255,255,255,.28);margin:0 0 10px 4px;'>"
         "Navigation</p>",
         unsafe_allow_html=True,

@@ -92,23 +92,26 @@ MODEL_DIR = Path(__file__).resolve().parent.parent / "Model"
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CSS scoped cho drill-down (ep text den)
+# CSS scoped cho drill-down (ep text den, update font)
 # ══════════════════════════════════════════════════════════════════════════════
 _DRILLDOWN_CSS = """
 <style>
 .dss-drill, .dss-drill *, .dss-drill p, .dss-drill span,
-.dss-drill label, .dss-drill div { color: #1c1e2e !important; }
+.dss-drill label, .dss-drill div { 
+    color: #1c1e2e !important; 
+    font-family: 'Inter', system-ui, sans-serif !important;
+}
 .dss-drill [data-testid="stRadio"] label,
 .dss-drill [data-testid="stRadio"] label p,
 .dss-drill div[role="radiogroup"] label,
 .dss-drill div[role="radiogroup"] label p {
     color: #1c1e2e !important; font-weight: 500 !important; opacity: 1 !important;
 }
-.dss-drill [data-testid="stRadio"] label p { font-size: 0.88rem !important; }
+.dss-drill [data-testid="stRadio"] label p { font-size: 14px !important; }
 .dss-drill [data-testid="stWidgetLabel"],
 .dss-drill [data-testid="stWidgetLabel"] * {
     color: #1c1e2e !important; font-weight: 700 !important;
-    font-size: 0.75rem !important; text-transform: uppercase !important;
+    font-size: 12px !important; text-transform: uppercase !important;
     letter-spacing: 0.06em !important; opacity: 1 !important;
 }
 .dss-drill [data-testid="stRadio"] > div {
@@ -116,7 +119,7 @@ _DRILLDOWN_CSS = """
     padding: 10px 14px !important; border: 1px solid rgba(0,0,0,0.08) !important;
 }
 .dss-drill .chart-caption {
-    color: #1c1e2e !important; font-size: 0.78rem !important;
+    color: #5a6178 !important; font-size: 12.5px !important;
     font-style: italic !important; margin: 8px 0 0 !important;
 }
 </style>
@@ -146,20 +149,21 @@ def _render_drone_info_panel(model_name: str):
     st.markdown(
         f"""
         <div style="background:linear-gradient(135deg,#1b1e30,#262a44);
-                    border-radius:16px;padding:20px 24px;margin-bottom:16px;">
+                    border-radius:16px;padding:20px 24px;margin-bottom:16px;
+                    font-family:'Inter',system-ui,sans-serif;">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div style="display:flex;align-items:center;gap:14px;">
-              <span style="font-size:2.2rem;">{spec['icon']}</span>
+              <span style="font-size:32px;">{spec['icon']}</span>
               <div>
-                <div style="color:#fff;font-size:1.3rem;font-weight:700;
+                <div style="color:#fff;font-size:24px;font-weight:700;
                             letter-spacing:-0.02em;">{model_name}</div>
-                <div style="color:rgba(255,255,255,.55);font-size:0.8rem;">
+                <div style="color:#a9b0cf;font-size:13.5px;">
                     {spec['use_case']}</div>
               </div>
             </div>
             <span style="background:{spec['tier_color']}22;color:{spec['tier_color']};
                          border:1px solid {spec['tier_color']}55;border-radius:999px;
-                         padding:5px 16px;font-size:0.8rem;font-weight:700;">
+                         padding:5px 16px;font-size:13px;font-weight:700;">
                 {spec['tier']}
             </span>
           </div>
@@ -181,11 +185,11 @@ def _render_drone_info_panel(model_name: str):
     for icon, label, val in specs_grid:
         cells += (
             f"<div style='background:#fff;border:1px solid rgba(0,0,0,.07);"
-            f"border-radius:12px;padding:13px 16px;'>"
-            f"<div style='font-size:0.68rem;color:#64697a;font-weight:600;"
+            f"border-radius:12px;padding:13px 16px;font-family:\"Inter\",sans-serif;'>"
+            f"<div style='font-size:11.5px;color:#5a6178;font-weight:600;"
             f"text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;'>"
             f"{icon} {label}</div>"
-            f"<div style='font-size:0.92rem;color:#1c1e2e;font-weight:700;'>{val}</div>"
+            f"<div style='font-size:14.5px;color:#1c1e2e;font-weight:700;'>{val}</div>"
             f"</div>"
         )
     st.markdown(
@@ -254,18 +258,20 @@ def render():
         st.markdown(
             f"""
             <div style="display:flex; justify-content:space-between;
-                        align-items:center; margin-bottom:8px;">
+                        align-items:center; margin-bottom:12px;
+                        font-family:'Inter',system-ui,sans-serif;">
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:1.3rem;">🔎</span>
-                    <span style="font-size:1.1rem; font-weight:700; color:#1c1e2e;">
+                    <span style="font-size:20px;">🔎</span>
+                    <span style="font-size:17px; font-weight:700; color:#1b1e30;
+                                 letter-spacing:-0.01em;">
                         Lịch sử bay</span>
-                    <span style="background:#eef0fb; color:#4f63d2;
+                    <span style="background:#eaedfb; color:#4f63d2;
                                  font-family:'JetBrains Mono',monospace;
-                                 font-size:0.85rem; font-weight:700;
-                                 padding:3px 12px; border-radius:7px;">
+                                 font-size:13px; font-weight:700;
+                                 padding:4px 12px; border-radius:7px;">
                         {drone_sel} · {model_name}</span>
                 </div>
-                <div style="font-size:0.85rem; font-weight:600; color:#1c1e2e;">
+                <div style="font-size:13.5px; font-weight:600; color:#1b1e30;">
                     {status_label}</div>
             </div>
             """,
@@ -341,26 +347,26 @@ def render():
         fig_history.add_hline(y=6, line_dash="dash", line_color="#dc2626", line_width=1.2,
                               annotation_text="<b>≥ 6</b>  Ngưỡng nguy hiểm",
                               annotation_position="top left",
-                              annotation_font=dict(color="#dc2626", size=11),
+                              annotation_font=dict(color="#dc2626", size=11, family="Inter"),
                               annotation_bgcolor="rgba(255,255,255,0.85)")
         fig_history.add_hline(y=3, line_dash="dash", line_color="#d97706", line_width=1.2,
                               annotation_text="<b>≥ 3</b>  Ngưỡng cảnh báo",
                               annotation_position="top left",
-                              annotation_font=dict(color="#d97706", size=11),
+                              annotation_font=dict(color="#d97706", size=11, family="Inter"),
                               annotation_bgcolor="rgba(255,255,255,0.85)")
         fig_history.update_layout(
             xaxis=dict(title=dict(text=f"Timeline — {n_show:,} chuyến gần nhất",
-                                  font=dict(size=11, color="#1c1e2e")),
-                       tickfont=dict(size=10, color="#1c1e2e"),
+                                  font=dict(size=12, color="#5a6178", family="Inter")),
+                       tickfont=dict(size=11, color="#1c1e2e", family="JetBrains Mono"),
                        showgrid=False, showline=True, linecolor="rgba(0,0,0,0.08)"),
-            yaxis=dict(title=dict(text="Risk Score", font=dict(size=11, color="#1c1e2e")),
+            yaxis=dict(title=dict(text="Risk Score", font=dict(size=12, color="#5a6178", family="Inter")),
                        range=[-0.5, 10.5], dtick=2,
-                       tickfont=dict(size=10, color="#1c1e2e"),
+                       tickfont=dict(size=11, color="#1c1e2e", family="JetBrains Mono"),
                        gridcolor="rgba(0,0,0,0.04)", zeroline=False),
             hovermode="x unified",
-            hoverlabel=dict(bgcolor="white", font_size=12, bordercolor="rgba(0,0,0,0.1)"),
+            hoverlabel=dict(bgcolor="white", font_size=12, font_family="Inter", bordercolor="rgba(0,0,0,0.1)"),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
-                        font=dict(size=11, color="#1c1e2e"),
+                        font=dict(size=12, color="#1c1e2e", family="Inter"),
                         bgcolor="rgba(255,255,255,0.6)", borderwidth=0),
             margin=dict(t=20, b=50, l=60, r=40))
         fig_history.update_xaxes(showspikes=False)
@@ -384,16 +390,17 @@ def render():
         st.markdown(
             f"""
             <div style="background:#f7f8fc;border:1px solid rgba(0,0,0,.07);
-                        border-radius:14px;padding:18px 20px;height:100%;">
-              <div style="font-size:0.72rem;font-weight:700;color:#4f63d2;
-                          text-transform:uppercase;letter-spacing:0.06em;
-                          margin-bottom:10px;">
+                        border-radius:14px;padding:24px 26px;height:100%;
+                        font-family:'Inter',system-ui,sans-serif;">
+              <div style="font-size:11.5px;font-weight:700;color:#0284c7;
+                          text-transform:uppercase;letter-spacing:0.1em;
+                          margin-bottom:12px;">
                 🔬 Vì sao chọn {model_name}?</div>
-              <p style="font-size:0.9rem;color:#1c1e2e;line-height:1.7;margin:0;">
+              <p style="font-size:14px;color:#1c1e2e;line-height:1.6;margin:0;">
                 {spec.get('why', '')}</p>
-              <div style="margin-top:14px;padding-top:14px;
+              <div style="margin-top:16px;padding-top:16px;
                           border-top:1px solid rgba(0,0,0,.07);
-                          font-size:0.8rem;color:#64697a;line-height:1.6;">
+                          font-size:13px;color:#5a6178;line-height:1.5;">
                 <b>Chiến lược nghiên cứu:</b> 3 dòng DJI được chọn để bao phủ
                 <b>3 phân khúc thị trường</b> (phổ thông → cao cấp) với dải trọng
                 lượng 248g–958g và kháng gió cấp 5–6. Cách này giúp kiểm chứng
@@ -412,30 +419,31 @@ def render():
             st.markdown(
                 f"""
                 <div style="background:#fff;border:1px solid rgba(0,0,0,.07);
-                            border-radius:14px;padding:18px 20px;height:100%;">
-                  <div style="font-size:0.72rem;font-weight:700;color:#4f63d2;
-                              text-transform:uppercase;letter-spacing:0.06em;
-                              margin-bottom:14px;">
+                            border-radius:14px;padding:24px 26px;height:100%;
+                            font-family:'Inter',system-ui,sans-serif;">
+                  <div style="font-size:11.5px;font-weight:700;color:#16a34a;
+                              text-transform:uppercase;letter-spacing:0.1em;
+                              margin-bottom:16px;">
                     🎯 Độ chính xác mô hình trên {drone_sel}</div>
-                  <div style="display:flex;gap:20px;margin-bottom:8px;">
+                  <div style="display:flex;gap:28px;margin-bottom:10px;">
                     <div>
-                      <div style="font-size:2rem;font-weight:700;color:#16a34a;
+                      <div style="font-size:28px;font-weight:700;color:#16a34a;
                                   font-family:'JetBrains Mono',monospace;">
                         {d['accuracy']*100:.1f}%</div>
-                      <div style="font-size:0.7rem;color:#64697a;">Accuracy</div>
+                      <div style="font-size:12px;color:#5a6178;margin-top:2px;">Accuracy</div>
                     </div>
                     <div>
-                      <div style="font-size:2rem;font-weight:700;color:#4f63d2;
+                      <div style="font-size:28px;font-weight:700;color:#4f63d2;
                                   font-family:'JetBrains Mono',monospace;">
                         {d['f1']*100:.1f}%</div>
-                      <div style="font-size:0.7rem;color:#64697a;">F1-score</div>
+                      <div style="font-size:12px;color:#5a6178;margin-top:2px;">F1-score</div>
                     </div>
                   </div>
-                  <div style="font-size:0.78rem;color:#64697a;
-                              padding-top:12px;border-top:1px solid rgba(0,0,0,.07);">
+                  <div style="font-size:13px;color:#5a6178;line-height:1.5;
+                              padding-top:16px;border-top:1px solid rgba(0,0,0,.07);">
                     Đánh giá trên <b>{d['n_test']:,}</b> bản ghi test của riêng
-                    drone này (operation_risk). Con số cao và đồng đều giữa các
-                    drone chứng tỏ mô hình không thiên vị thiết bị nào.
+                    drone này (operation_risk). Con số cao và đồng đều chứng tỏ
+                    mô hình không thiên vị thiết bị nào.
                   </div>
                 </div>
                 """,
@@ -459,6 +467,11 @@ def render():
         fig = px.histogram(df_d, x="risk_score", nbins=11,
                            color_discrete_sequence=[COLORS["accent"]], opacity=0.85)
         fig.update_traces(marker_line_width=0)
+        fig.update_layout(
+            font=dict(family="Inter", size=11, color="#5a6178"),
+            xaxis=dict(tickfont=dict(family="JetBrains Mono", size=11, color="#1c1e2e")),
+            yaxis=dict(tickfont=dict(family="JetBrains Mono", size=11, color="#1c1e2e"))
+        )
         st.plotly_chart(style_chart(fig, 340), width="stretch")
         st.caption(
             "📊 Phân bổ điểm rủi ro của riêng drone này. So với baseline fleet, "
@@ -471,6 +484,11 @@ def render():
         fig2 = px.scatter(sample, x="flight_time", y="battery_level",
                           color="operation_risk", opacity=0.65,
                           color_discrete_map=RISK_COLOR_MAP)
+        fig2.update_layout(
+            font=dict(family="Inter", size=11, color="#5a6178"),
+            xaxis=dict(tickfont=dict(family="JetBrains Mono", size=11, color="#1c1e2e")),
+            yaxis=dict(tickfont=dict(family="JetBrains Mono", size=11, color="#1c1e2e"))
+        )
         st.plotly_chart(style_chart(fig2, 340), width="stretch")
         st.caption(
             "🔋 Mối tương quan giữa thời gian bay và pin còn lại. Đường giảm dốc "
@@ -482,7 +500,8 @@ def render():
     mc.columns = ["action", "count"]
     fig3 = px.pie(mc, names="action", values="count", hole=0.55,
                   color_discrete_sequence=SEQ)
-    fig3.update_traces(textfont_size=12)
+    fig3.update_traces(textfont_size=12, textfont_family="Inter")
+    fig3.update_layout(font=dict(family="Inter", size=12, color="#1c1e2e"))
     st.plotly_chart(style_chart(fig3, 380), width="stretch")
     st.caption(
         "🥯 Donut chart cho thấy tỉ lệ các hành động bảo trì cho drone này. "
